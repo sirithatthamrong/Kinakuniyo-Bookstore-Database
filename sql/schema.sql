@@ -1,6 +1,7 @@
 -- Schema for Kinokuniya Bookstore Database
 
 -- 1. Membership Table
+DROP TABLE IF EXISTS Membership CASCADE;
 CREATE TABLE Membership (
     membership_id SERIAL PRIMARY KEY,
     membership_status VARCHAR(50) UNIQUE NOT NULL CHECK (
@@ -10,6 +11,7 @@ CREATE TABLE Membership (
 );
 
 -- 2. Customer Table
+DROP TABLE IF EXISTS Customer CASCADE;
 CREATE TABLE Customer (
     customer_id SERIAL PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -24,6 +26,7 @@ CREATE TABLE Customer (
 );
 
 -- 3. Book Table
+DROP TABLE IF EXISTS Book CASCADE;
 CREATE TABLE Book (
     book_id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
@@ -37,6 +40,7 @@ CREATE TABLE Book (
 );
 
 -- 4. Orders Table
+DROP TABLE IF EXISTS Orders CASCADE;
 CREATE TABLE Orders (
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
@@ -53,6 +57,7 @@ CREATE TABLE Orders (
 );
 
 -- 5. Order_Item Table (Many-to-Many between Order and Book)
+DROP TABLE IF EXISTS Order_Item CASCADE;
 CREATE TABLE Order_Item (
     order_item_id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
@@ -63,6 +68,7 @@ CREATE TABLE Order_Item (
 );
 
 -- 6. Review Table
+DROP TABLE IF EXISTS Review CASCADE;
 CREATE TABLE Review (
     review_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
@@ -73,6 +79,7 @@ CREATE TABLE Review (
 );
 
 -- 7. Wishlist Table
+DROP TABLE IF EXISTS Wishlist CASCADE;
 CREATE TABLE Wishlist (
     wishlist_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
@@ -81,6 +88,7 @@ CREATE TABLE Wishlist (
 );
 
 -- 8. Wishlist_Item Table (Many-to-Many between Wishlist and Book)
+DROP TABLE IF EXISTS Wishlist_Item CASCADE;
 CREATE TABLE Wishlist_Item (
     wishlist_id INTEGER REFERENCES Wishlist(wishlist_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
@@ -88,12 +96,14 @@ CREATE TABLE Wishlist_Item (
 );
 
 -- 9. Category Table
+DROP TABLE IF EXISTS Category CASCADE;
 CREATE TABLE Category (
     category_id SERIAL PRIMARY KEY,
     category_name VARCHAR(100) UNIQUE NOT NULL
 );
 
 -- 10. Book_Category Table (Many-to-Many between Book and Category)
+DROP TABLE IF EXISTS Book_Category CASCADE;
 CREATE TABLE Book_Category (
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
     category_id INTEGER REFERENCES Category(category_id) ON DELETE CASCADE,
@@ -101,6 +111,7 @@ CREATE TABLE Book_Category (
 );
 
 -- 11. Supplier Table
+DROP TABLE IF EXISTS Supplier CASCADE;
 CREATE TABLE Supplier (
     supplier_id SERIAL PRIMARY KEY,
     supplier_name VARCHAR(100) NOT NULL,
@@ -110,6 +121,7 @@ CREATE TABLE Supplier (
 );
 
 -- 12. Inventory Table
+DROP TABLE IF EXISTS Inventory CASCADE;
 CREATE TABLE Inventory (
     inventory_id SERIAL PRIMARY KEY,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
@@ -121,6 +133,7 @@ CREATE TABLE Inventory (
 );
 
 -- 13. Shopping_Cart Table
+DROP TABLE IF EXISTS Shopping_Cart CASCADE;
 CREATE TABLE Shopping_Cart (
     cart_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
@@ -129,6 +142,7 @@ CREATE TABLE Shopping_Cart (
 );
 
 -- 14. Shopping_Cart_Item Table (Many-to-Many between Shopping_Cart and Book)
+DROP TABLE IF EXISTS Shopping_Cart_Item CASCADE;
 CREATE TABLE Shopping_Cart_Item (
     cart_id INTEGER REFERENCES Shopping_Cart(cart_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
@@ -138,6 +152,7 @@ CREATE TABLE Shopping_Cart_Item (
 );
 
 -- 15. Store_Location Table
+DROP TABLE IF EXISTS Store_Location CASCADE;
 CREATE TABLE Store_Location (
     location_id SERIAL PRIMARY KEY,
     store_name VARCHAR(100) NOT NULL,
@@ -149,6 +164,7 @@ CREATE TABLE Store_Location (
 );
 
 -- 16. Store_Inventory Table (Many-to-Many between Store_Location and Book)
+DROP TABLE IF EXISTS Store_Inventory CASCADE;
 CREATE TABLE Store_Inventory (
     location_id INTEGER REFERENCES Store_Location(location_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
