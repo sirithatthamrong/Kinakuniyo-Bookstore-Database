@@ -3,8 +3,9 @@
 -- 1. Membership Table
 CREATE TABLE Membership (
     membership_id SERIAL PRIMARY KEY,
-    membership_status VARCHAR(50) CHECK (
-        membership_status IN ('Non-Member', 'Regular Member', 'Privilege Card Member')),
+    membership_status VARCHAR(50) UNIQUE NOT NULL CHECK (
+        membership_status IN ('Non-Member', 'Regular Member', 'Privilege Card Member')
+        ),
     discount_rate DECIMAL(3, 2) DEFAULT 0.00
 );
 
@@ -29,23 +30,24 @@ CREATE TABLE Book (
     author VARCHAR(100) NOT NULL,
     genre VARCHAR(50),
     publication_date DATE,
-    ISBN VARCHAR(20) UNIQUE,
+    ISBN CHAR(13) UNIQUE NOT NULL,
     price MONEY NOT NULL,
     language VARCHAR(50),
-    stock_quantity INTEGER DEFAULT 0,
-    discount_rate DECIMAL(3, 2) DEFAULT 0.00
+    stock_quantity INTEGER DEFAULT 0 CHECK (stock_quantity >= 0)
 );
 
--- 4. Order Table
+-- 4. Orders Table
 CREATE TABLE Orders (
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
     order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     total_price MONEY NOT NULL,
-    status VARCHAR(50) CHECK (
-        status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')),
-    pay_method VARCHAR(50) CHECK (
-        pay_method IN ('Cash', 'Credit Card', 'Debit Card', 'Online Payment', 'Gift Card', 'Points')),
+    status VARCHAR(50) NOT NULL CHECK (
+        status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')
+    ),
+    pay_method VARCHAR(50) NOT NULL CHECK (
+        pay_method IN ('Cash', 'Credit Card', 'Debit Card', 'Online Payment', 'Gift Card', 'Points')
+    ),
     shipping_address TEXT,
     delivery_date TIMESTAMP
 );
@@ -104,7 +106,7 @@ CREATE TABLE Supplier (
     supplier_name VARCHAR(100) NOT NULL,
     contact_info TEXT,
     address TEXT,
-    email VARCHAR(100),
+    email VARCHAR(100)
 );
 
 -- 12. Inventory Table
@@ -115,7 +117,7 @@ CREATE TABLE Inventory (
     quantity INTEGER NOT NULL CHECK (quantity >= 0),
     purchase_price MONEY NOT NULL,
     purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reoreder_level INTEGER DEFAULT 0 -- Minimum quantity to trigger reorder
+    reorder_level INTEGER DEFAULT 0 -- Minimum quantity to trigger reorder
 );
 
 -- 13. Shopping_Cart Table
