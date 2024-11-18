@@ -1,5 +1,32 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Welcome to Kinokuniya!</h2>
-<p>Explore our collection of books across multiple genres and languages.</p>
+
+<section class="hero">
+    <div class="hero-content">
+        <h2>Welcome to Kinokuniya!</h2>
+        <p>Discover a world of books across multiple genres and languages. Whether you're a casual reader or an avid book lover, we have something for everyone!</p>
+        <a href="/books" class="btn">Explore Books</a>
+    </div>
+</section>
+
+<section class="featured">
+    <h3>Featured Categories</h3>
+    <div class="category-grid">
+        <div class="category-card">Fiction</div>
+        <div class="category-card">Non-Fiction</div>
+        <div class="category-card">Children's Books</div>
+        <div class="category-card">Manga & Comics</div>
+    </div>
+</section>
+
+<section class="newsletter">
+    <h3>Stay Updated</h3>
+    <p>Subscribe to our newsletter for the latest updates and offers!</p>
+    <form>
+        <input type="email" placeholder="Enter your email" required>
+        <button type="submit">Subscribe</button>
+    </form>
+</section>
+
+
 {% endblock %}

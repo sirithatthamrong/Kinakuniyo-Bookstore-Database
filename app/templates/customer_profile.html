@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>My Profile</h2>
+<ul>
+    <li><a href="/customer/profile/personal_info">Personal Information</a></li>
+    <li><a href="/customer/profile/wishlist">Wishlist</a></li>
+    <li><a href="/customer/profile/cart">Cart</a></li>
+    <li><a href="/customer/profile/orders">Transactions</a></li>
+    <li><a href="/customer/profile/membership">Membership Loyalty</a></li>
+</ul>
+<div id="profile-content">
+    {% block profile_content %}{% endblock %}
+</div>
+{% endblock %}
