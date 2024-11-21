@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: kinokuniya-flask-app
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: kinokuniya-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: kinokuniya-db
+          property: password
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: kinokuniya-db
+          property: database
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: kinokuniya-db
+          property: host
+
+  - type: postgresql
+    name: kinokuniya-db
+    plan: free
