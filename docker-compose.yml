@@ -7,6 +7,7 @@ services:
       - POSTGRES_USER=kinokuniya_user
       - POSTGRES_PASSWORD=kinokuniya_password
       - POSTGRES_DB=kinokuniya_db
+      - POSTGRES_HOST=db
     ports:
       - "5432:5432"
     volumes:
