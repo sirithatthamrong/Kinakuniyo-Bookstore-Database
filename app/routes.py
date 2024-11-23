@@ -1,9 +1,21 @@
 from flask import render_template, Response
+from sqlalchemy import text
 
 def register_routes(app):
+    from app import db
+
     @app.route('/')
     def home():
         return render_template('home.html')
+    
+    @app.route('/test_db')
+    def test_db():
+        try:
+            # Perform a simple query to test the connection
+            result = db.session.execute(text('SELECT 1'))
+            return 'Database connection successful!'
+        except Exception as e:
+            return f'Database connection failed: {e}'
 
     @app.route('/books')
     def books():
