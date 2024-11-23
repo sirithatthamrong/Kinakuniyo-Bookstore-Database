@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS Membership CASCADE;
 CREATE TABLE Membership (
     membership_id SERIAL PRIMARY KEY,
     membership_status VARCHAR(50) UNIQUE NOT NULL CHECK (
-        membership_status IN ('Non-Member', 'Regular Member', 'Privilege Card Member')
+        membership_status IN ('Regular', 'Silver', 'Gold', 'Platinum')
         ),
     discount_rate DECIMAL(3, 2) DEFAULT 0.00
 );
@@ -22,7 +22,7 @@ CREATE TABLE Customer (
     address TEXT,
     date_of_birth DATE,
     loyalty_points INTEGER DEFAULT 0,
-    membership_id INTEGER REFERENCES Membership(membership_id) ON DELETE SET NULL,
+    membership_id INTEGER REFERENCES Membership(membership_id) ON DELETE SET NULL DEFAULT 1,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL
 );
