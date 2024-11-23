@@ -1,4 +1,4 @@
-from flask import render_template, Response
+from flask import render_template, Response, request, flash, redirect, url_for, session
 from sqlalchemy import text
 
 def register_routes(app):
@@ -16,6 +16,54 @@ def register_routes(app):
             return 'Database connection successful!'
         except Exception as e:
             return f'Database connection failed: {e}'
+        
+    @app.route('/signup', methods=['GET', 'POST'])
+    def signup():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+            first_name = request.form['first_name']
+            last_name = request.form['last_name']
+
+            try:
+                # Call PL/pgSQL function to create a new user
+                db.session.execute(text("SELECT create_customer(:username, :password, :first_name, :last_name)"),
+                                   {'username': username, 'password': password, 'first_name': first_name, 'last_name': last_name})
+                db.session.commit()
+                flash('Account created successfully. Please login.')
+                return redirect(url_for('login'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error: {e}')
+                return redirect(url_for('signup'))
+        return render_template('signup.html')
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if request.method == 'POST':
+            username = request.form['username']
+            password = request.form['password']
+
+            # Call PL/pgSQL function to verify login
+            result = db.session.execute(text("SELECT verify_customer(:username, :password)"),
+                                        {'username': username, 'password': password}).scalar()
+
+            if result:
+                # Store username in session
+                session['username'] = username
+                flash('Login successful!')
+                return redirect(url_for('customer_profile')) # Redirect to customer profile page
+            else:
+                flash('Invalid username or password.')
+                return redirect(url_for('login'))
+        return render_template('login.html')
+    
+    @app.route('/logout')
+    def logout():
+        # Remove user from the session
+        session.pop('username', None)
+        flash('You have been logged out.')
+        return redirect(url_for('home'))
 
     @app.route('/books')
     def books():
@@ -23,6 +71,11 @@ def register_routes(app):
 
     @app.route('/customer/profile')
     def customer_profile():
+        # Check if user is logged in
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+    
         return render_template('customer_profile.html')
     
     @app.route('/customer/profile/personal_info')

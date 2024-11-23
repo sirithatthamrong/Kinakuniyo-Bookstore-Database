@@ -8,6 +8,7 @@ db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = os.urandom(24) # Set a secret key for the session management
 
     # Load environment variables
     postgres_user = os.getenv('POSTGRES_USER')
