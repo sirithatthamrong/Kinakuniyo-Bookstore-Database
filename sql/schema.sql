@@ -22,7 +22,9 @@ CREATE TABLE Customer (
     address TEXT,
     date_of_birth DATE,
     loyalty_points INTEGER DEFAULT 0,
-    membership_id INTEGER REFERENCES Membership(membership_id) ON DELETE SET NULL
+    membership_id INTEGER REFERENCES Membership(membership_id) ON DELETE SET NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(100) NOT NULL
 );
 
 -- 3. Book Table
