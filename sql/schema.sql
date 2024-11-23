@@ -49,14 +49,23 @@ CREATE TABLE Orders (
     status VARCHAR(50) NOT NULL CHECK (
         status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')
     ),
-    pay_method VARCHAR(50) NOT NULL CHECK (
-        pay_method IN ('Cash', 'Credit Card', 'Debit Card', 'Online Payment', 'Gift Card', 'Points')
-    ),
     shipping_address TEXT,
     delivery_date TIMESTAMP
 );
 
--- 5. Order_Item Table (Many-to-Many between Order and Book)
+-- 5. Payment Table
+DROP TABLE IF EXISTS Payment CASCADE;
+CREATE TABLE Payment (
+    payment_id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
+    payment_method VARCHAR(50) NOT NULL CHECK (
+        payment_method IN ('Cash', 'Credit Card', 'Debit Card', 'Online Payment', 'Gift Card', 'Points')
+    ),
+    amount MONEY NOT NULL,
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Order_Item Table (Many-to-Many between Order and Book)
 DROP TABLE IF EXISTS Order_Item CASCADE;
 CREATE TABLE Order_Item (
     order_item_id SERIAL PRIMARY KEY,
@@ -67,7 +76,7 @@ CREATE TABLE Order_Item (
     discount MONEY DEFAULT 0
 );
 
--- 6. Review Table
+-- 7. Review Table
 DROP TABLE IF EXISTS Review CASCADE;
 CREATE TABLE Review (
     review_id SERIAL PRIMARY KEY,
@@ -78,7 +87,7 @@ CREATE TABLE Review (
     review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 7. Wishlist Table
+-- 8. Wishlist Table
 DROP TABLE IF EXISTS Wishlist CASCADE;
 CREATE TABLE Wishlist (
     wishlist_id SERIAL PRIMARY KEY,
@@ -87,7 +96,7 @@ CREATE TABLE Wishlist (
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 8. Wishlist_Item Table (Many-to-Many between Wishlist and Book)
+-- 9. Wishlist_Item Table (Many-to-Many between Wishlist and Book)
 DROP TABLE IF EXISTS Wishlist_Item CASCADE;
 CREATE TABLE Wishlist_Item (
     wishlist_id INTEGER REFERENCES Wishlist(wishlist_id) ON DELETE CASCADE,
@@ -95,14 +104,14 @@ CREATE TABLE Wishlist_Item (
     PRIMARY KEY (wishlist_id, book_id)
 );
 
--- 9. Category Table
+-- 10. Category Table
 DROP TABLE IF EXISTS Category CASCADE;
 CREATE TABLE Category (
     category_id SERIAL PRIMARY KEY,
     category_name VARCHAR(100) UNIQUE NOT NULL
 );
 
--- 10. Book_Category Table (Many-to-Many between Book and Category)
+-- 11. Book_Category Table (Many-to-Many between Book and Category)
 DROP TABLE IF EXISTS Book_Category CASCADE;
 CREATE TABLE Book_Category (
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
@@ -110,7 +119,7 @@ CREATE TABLE Book_Category (
     PRIMARY KEY (book_id, category_id)
 );
 
--- 11. Supplier Table
+-- 12. Supplier Table
 DROP TABLE IF EXISTS Supplier CASCADE;
 CREATE TABLE Supplier (
     supplier_id SERIAL PRIMARY KEY,
@@ -120,7 +129,7 @@ CREATE TABLE Supplier (
     email VARCHAR(100)
 );
 
--- 12. Inventory Table
+-- 13. Inventory Table
 DROP TABLE IF EXISTS Inventory CASCADE;
 CREATE TABLE Inventory (
     inventory_id SERIAL PRIMARY KEY,
@@ -132,7 +141,7 @@ CREATE TABLE Inventory (
     reorder_level INTEGER DEFAULT 0 -- Minimum quantity to trigger reorder
 );
 
--- 13. Shopping_Cart Table
+-- 14. Shopping_Cart Table
 DROP TABLE IF EXISTS Shopping_Cart CASCADE;
 CREATE TABLE Shopping_Cart (
     cart_id SERIAL PRIMARY KEY,
@@ -141,7 +150,7 @@ CREATE TABLE Shopping_Cart (
     total_amount MONEY NOT NULL
 );
 
--- 14. Shopping_Cart_Item Table (Many-to-Many between Shopping_Cart and Book)
+-- 15. Shopping_Cart_Item Table (Many-to-Many between Shopping_Cart and Book)
 DROP TABLE IF EXISTS Shopping_Cart_Item CASCADE;
 CREATE TABLE Shopping_Cart_Item (
     cart_id INTEGER REFERENCES Shopping_Cart(cart_id) ON DELETE CASCADE,
@@ -151,7 +160,7 @@ CREATE TABLE Shopping_Cart_Item (
     PRIMARY KEY (cart_id, book_id)
 );
 
--- 15. Store_Location Table
+-- 16. Store_Location Table
 DROP TABLE IF EXISTS Store_Location CASCADE;
 CREATE TABLE Store_Location (
     location_id SERIAL PRIMARY KEY,
@@ -163,7 +172,7 @@ CREATE TABLE Store_Location (
     hours_of_operation VARCHAR(50)
 );
 
--- 16. Store_Inventory Table (Many-to-Many between Store_Location and Book)
+-- 17. Store_Inventory Table (Many-to-Many between Store_Location and Book)
 DROP TABLE IF EXISTS Store_Inventory CASCADE;
 CREATE TABLE Store_Inventory (
     location_id INTEGER REFERENCES Store_Location(location_id) ON DELETE CASCADE,
