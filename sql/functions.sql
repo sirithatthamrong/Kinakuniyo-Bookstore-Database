@@ -86,3 +86,54 @@ BEGIN
         WHERE c.username = p_username;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Reset loyalty points for all customers
+CREATE OR REPLACE FUNCTION reset_loyalty_points()
+    RETURNS VOID AS $$
+BEGIN
+    UPDATE customer
+    SET loyalty_points = 0,
+        membership_id = 1 -- Reset to Regular membership
+    WHERE '1' = '1';
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Update loyalty points and membership status when a book is purchased
+CREATE OR REPLACE FUNCTION update_loyalty_points(p_customer_id INTEGER)
+    RETURNS VOID AS $$
+DECLARE
+    current_points INTEGER;
+BEGIN
+    -- Increase loyalty points by 5
+    UPDATE customer
+    SET loyalty_points = loyalty_points + 5
+    WHERE customer_id = p_customer_id;
+
+    -- Get the updated loyalty points
+    SELECT loyalty_points INTO current_points
+    FROM customer
+    WHERE customer_id = p_customer_id;
+
+    -- Update membership status based on loyalty points
+    IF current_points <= 25 THEN
+        UPDATE customer
+        SET membership_id = 1 -- Regular
+        WHERE customer_id = p_customer_id;
+    ELSIF current_points <= 50 THEN
+        UPDATE customer
+        SET membership_id = 2 -- Silver
+        WHERE customer_id = p_customer_id;
+    ELSIF current_points <= 75 THEN
+        UPDATE customer
+        SET membership_id = 3 -- Gold
+        WHERE customer_id = p_customer_id;
+    ELSE
+        UPDATE customer
+        SET membership_id = 4 -- Platinum
+        WHERE customer_id = p_customer_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
