@@ -7,15 +7,6 @@ def register_routes(app):
     @app.route('/')
     def home():
         return render_template('home.html')
-    
-    @app.route('/test_db')
-    def test_db():
-        try:
-            # Perform a simple query to test the connection
-            result = db.session.execute(text('SELECT 1'))
-            return 'Database connection successful!'
-        except Exception as e:
-            return f'Database connection failed: {e}'
         
     @app.route('/signup', methods=['GET', 'POST'])
     def signup():
@@ -75,8 +66,9 @@ def register_routes(app):
         if 'username' not in session:
             flash("You need to log in first", "warning")
             return redirect(url_for('login'))
-    
-        return render_template('customer_profile.html')
+        
+        username = session['username']
+        return render_template('customer_profile.html', username=username)
     
     @app.route('/customer/profile/personal_info', methods=['GET', 'POST'])
     def personal_info():

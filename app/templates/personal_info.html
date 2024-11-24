@@ -2,6 +2,9 @@
 {% block profile_content %}
 <h3>Personal Information</h3>
 <form action="/customer/profile/personal_info" method="POST">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" value="{{ customer.username }}" required>
+    
     <label for="first_name">First Name:</label>
     <input type="text" id="first_name" name="first_name" value="{{ customer.first_name }}" required>
     
