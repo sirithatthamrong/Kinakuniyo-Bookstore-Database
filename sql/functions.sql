@@ -44,3 +44,26 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+-- Update customer information
+CREATE OR REPLACE FUNCTION update_customer(
+    p_username VARCHAR,
+    p_first_name VARCHAR,
+    p_middle_name VARCHAR,
+    p_last_name VARCHAR,
+    p_email VARCHAR,
+    p_phone_number VARCHAR,
+    p_address TEXT,
+    p_date_of_birth DATE
+) RETURNS VOID AS $$
+BEGIN
+    UPDATE customer
+    SET first_name = p_first_name,
+        middle_name = p_middle_name,
+        last_name = p_last_name,
+        email = p_email,
+        phone_number = p_phone_number,
+        address = p_address,
+        date_of_birth = p_date_of_birth
+    WHERE username = p_username;
+END;
+$$ LANGUAGE plpgsql;

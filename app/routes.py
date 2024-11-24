@@ -78,9 +78,45 @@ def register_routes(app):
     
         return render_template('customer_profile.html')
     
-    @app.route('/customer/profile/personal_info')
+    @app.route('/customer/profile/personal_info', methods=['GET', 'POST'])
     def personal_info():
-        return render_template('personal_info.html')
+        # Check if user is logged in
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+        
+        username = session['username']
+
+        if request.method == 'POST':
+            first_name = request.form['first_name']
+            middle_name = request.form['middle_name']
+            last_name = request.form['last_name']
+            email = request.form['email']
+            phone_number = request.form['phone_number']
+            address = request.form['address']
+            date_of_birth = request.form['date_of_birth']
+
+            try:
+                # Call PL/pgSQL function to update customer information
+                db.session.execute(text("SELECT update_customer(:username, :first_name, :middle_name, :last_name, :email, :phone_number, :address, :date_of_birth)"),
+                                   {'username': username, 'first_name': first_name, 'middle_name': middle_name, 'last_name': last_name, 'email': email, 'phone_number': phone_number, 'address': address, 'date_of_birth': date_of_birth})
+                db.session.commit()
+                flash('Profile updated successfully.')
+                return redirect(url_for('personal_info'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error: {e}')
+                return redirect(url_for('personal_info'))
+
+        # Get customer details
+        username = session['username']
+        customer = db.session.execute(text("SELECT * FROM customer WHERE username = :username"), {'username': username}).fetchone()
+
+        if customer:
+            return render_template('personal_info.html', customer=customer)
+        else:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('customer_profile'))
     
     @app.route('/customer/profile/orders')
     def orders():

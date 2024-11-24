@@ -1,8 +1,28 @@
 {% extends 'customer_profile.html' %}
 {% block profile_content %}
 <h3>Personal Information</h3>
-<p>Name: John Doe</p>
-<p>Email: john.doe@example.com</p>
-<p>Phone: 123-456-7890</p>
-<p>Address: 123 Main St, Anytown, USA</p>
+<form action="/customer/profile/personal_info" method="POST">
+    <label for="first_name">First Name:</label>
+    <input type="text" id="first_name" name="first_name" value="{{ customer.first_name }}" required>
+    
+    <label for="middle_name">Middle Name:</label>
+    <input type="text" id="middle_name" name="middle_name" value="{{ customer.middle_name }}">
+    
+    <label for="last_name">Last Name:</label>
+    <input type="text" id="last_name" name="last_name" value="{{ customer.last_name }}" required>
+    
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" value="{{ customer.email }}">
+    
+    <label for="phone_number">Phone Number:</label>
+    <input type="text" id="phone_number" name="phone_number" value="{{ customer.phone_number }}">
+    
+    <label for="address">Address:</label>
+    <textarea id="address" name="address">{{ customer.address }}</textarea>
+    
+    <label for="date_of_birth">Date of Birth:</label>
+    <input type="date" id="date_of_birth" name="date_of_birth" value="{{ customer.date_of_birth }}">
+    
+    <button type="submit">Update</button>
+</form>
 {% endblock %}
