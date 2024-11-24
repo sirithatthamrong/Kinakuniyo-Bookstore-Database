@@ -1,5 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto; -- For crypt() and gen_salt() function
 
+
 -- Create a new customer
 CREATE OR REPLACE FUNCTION create_customer(
     p_username VARCHAR,
@@ -15,6 +16,7 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Verify customer credentials
 CREATE OR REPLACE FUNCTION  verify_customer(
@@ -65,5 +67,22 @@ BEGIN
         address = p_address,
         date_of_birth = p_date_of_birth
     WHERE username = p_username;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Get membership details
+CREATE OR REPLACE FUNCTION get_membership_details(p_username VARCHAR)
+    RETURNS TABLE (
+                      loyalty_points INTEGER,
+                      discount_rate NUMERIC,
+                      membership_status VARCHAR
+                  ) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT c.loyalty_points, m.discount_rate, m.membership_status
+        FROM customer c
+                 JOIN membership m ON c.membership_id = m.membership_id
+        WHERE c.username = p_username;
 END;
 $$ LANGUAGE plpgsql;

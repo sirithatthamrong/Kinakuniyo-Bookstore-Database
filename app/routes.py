@@ -124,7 +124,22 @@ def register_routes(app):
 
     @app.route('/customer/profile/membership')
     def membership():
-        return render_template('membership.html')
+        # Check if user is logged in
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+        
+        username = session['username']
+
+        # Retrieve loyalty points and discount rate from the database
+        membership_details = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status FROM get_membership_details(:username)"),
+                                                {'username': username}).fetchone()
+
+        if membership_details:
+            return render_template('membership.html', loyalty_points=membership_details.loyalty_points, discount_rate=membership_details.discount_rate, membership_status=membership_details.membership_status)
+        else:
+            flash('Membership details not found.', 'danger')
+            return redirect(url_for('customer_profile'))
 
     @app.route('/sitemap')
     def sitemap_html():
