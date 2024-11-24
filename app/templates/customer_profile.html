@@ -1,14 +1,21 @@
 {% extends 'base.html' %}
+{% block head %}
+<link rel="stylesheet" href="/static/profile.css">
+{% endblock %}
 {% block content %}
-<h2>My Profile</h2>
-<ul>
-    <li><a href="/customer/profile/personal_info">Personal Information</a></li>
-    <li><a href="/customer/profile/wishlist">Wishlist</a></li>
-    <li><a href="/customer/profile/cart">Cart</a></li>
-    <li><a href="/customer/profile/orders">Transactions</a></li>
-    <li><a href="/customer/profile/membership">Membership Loyalty</a></li>
-</ul>
-<div id="profile-content">
-    {% block profile_content %}{% endblock %}
+<div class="profile-container">
+    <h2>My Profile</h2>
+    <div class="profile-layout">
+        <ul class="profile-tabs">
+            <li><a href="/customer/profile/personal_info">Personal Information</a></li>
+            <li><a href="/customer/profile/membership">Membership Loyalty</a></li>
+            <li><a href="/customer/profile/wishlist">Wishlist</a></li>
+            <li><a href="/customer/profile/cart">Cart</a></li>
+            <li><a href="/customer/profile/orders">Transactions</a></li>
+        </ul>
+        <div class="profile-content">
+            {% block profile_content %}{% endblock %}
+        </div>
+    </div>
 </div>
 {% endblock %}
