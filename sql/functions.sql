@@ -1,7 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto; -- For crypt() and gen_salt() function
 
 
--- Create a new customer
+/****************************************************************************************
+CREATE CUSTOMER FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION create_customer(
     p_username VARCHAR,
     p_password VARCHAR,
@@ -18,7 +20,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Verify customer credentials
+/****************************************************************************************
+VERIFY CUSTOMER FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION  verify_customer(
     p_username character varying,
     p_password character varying
@@ -46,7 +50,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Update customer information
+/****************************************************************************************
+UPDATE CUSTOMER FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION update_customer(
     p_username VARCHAR,
     p_first_name VARCHAR,
@@ -73,8 +79,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- Get membership details
--- DROP FUNCTION get_membership_details(character varying)
+/****************************************************************************************
+GET CUSTOMER DETAILS FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_membership_details(p_username VARCHAR)
     RETURNS TABLE (
                       loyalty_points INTEGER,
@@ -95,5 +102,80 @@ BEGIN
                  LEFT JOIN Gold g ON c.customer_id = g.customer_id
                  LEFT JOIN Platinum p ON c.customer_id = p.customer_id
         WHERE c.username = p_username;
+END;
+$$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+ADD OR UPDATE REVIEW FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_or_update_review(
+    p_customer_id INTEGER,
+    p_book_id INTEGER,
+    p_rating INTEGER,
+    p_review_text TEXT
+) RETURNS VOID AS $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM review WHERE customer_id = p_customer_id AND book_id = p_book_id) THEN
+        -- Update existing review
+        UPDATE review
+        SET rating = p_rating,
+            review_text = p_review_text,
+            review_date = CURRENT_TIMESTAMP
+        WHERE customer_id = p_customer_id AND book_id = p_book_id;
+    ELSE
+        -- Insert new review
+        INSERT INTO review (customer_id, book_id, rating, review_text, review_date)
+        VALUES (p_customer_id, p_book_id, p_rating, p_review_text, CURRENT_TIMESTAMP);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+ADD BOOK TO WISHLIST FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_book_to_wishlist(
+    p_customer_id INTEGER,
+    p_book_id INTEGER
+) RETURNS VOID AS $$
+BEGIN
+    INSERT INTO wishlist (customer_id, book_id)
+    VALUES (p_customer_id, p_book_id);
+END;
+$$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+REMOVE BOOK FROM WISHLIST FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION remove_book_from_wishlist(
+    p_customer_id INTEGER,
+    p_book_id INTEGER
+) RETURNS VOID AS $$
+BEGIN
+    DELETE FROM wishlist
+    WHERE customer_id = p_customer_id AND book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+GET CUSTOMER WISHLIST FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_wishlist(p_username VARCHAR)
+RETURNS TABLE (
+    book_id INTEGER,
+    title VARCHAR,
+    author VARCHAR,
+    genre VARCHAR,
+    price MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT b.book_id, b.title, b.author, b.genre, b.price
+    FROM wishlist w
+    JOIN book b ON w.book_id = b.book_id
+    WHERE w.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
 END;
 $$ LANGUAGE plpgsql;

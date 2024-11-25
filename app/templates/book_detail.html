@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block head %}
+<link rel="stylesheet" href="/static/book.css">
+{% endblock %}
+{% block content %}
+<h2>{{ book.title }}</h2>
+<div class="book-detail">
+    <p><strong>Author:</strong> {{ book.author }}</p>
+    <p><strong>Genre:</strong> {{ book.genre }}</p>
+    <p><strong>Publication Date:</strong> {{ book.publication_date }}</p>
+    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+    <p><strong>Price:</strong> {{ book.price }}</p>
+    <p><strong>Language:</strong> {{ book.language }}</p>
+    <p><strong>Stock Quantity:</strong> {{ book.stock_quantity }}</p>
+    {% if 'username' in session %}
+    <form action="{{ url_for('add_book_to_wishlist', book_id=book.book_id) }}" method="POST">
+        <button type="submit">Add to Wishlist</button>
+    </form>
+    {% endif %}
+</div>
+
+<h3>Reviews</h3>
+<div class="reviews">
+    {% for review in reviews %}
+    <div class="review-item">
+        <p><strong>Rating:</strong> {{ review.rating }} / 5</p>
+        <p>{{ review.review_text }}</p>
+        <p><em>Reviewed on {{ review.review_date }}</em></p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if 'username' in session %}
+<h3>Add a Review</h3>
+<form action="{{ url_for('add_review', book_id=book.book_id) }}" method="POST">
+    <label for="rating">Rating:</label>
+    <select id="rating" name="rating" required>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <label for="review_text">Review:</label>
+    <textarea id="review_text" name="review_text" required></textarea>
+    <button type="submit">Submit Review</button>
+</form>
+{% else %}
+<p>You need to <a href="{{ url_for('login') }}">login</a> to add a review.</p>
+{% endif %}
+{% endblock %}
