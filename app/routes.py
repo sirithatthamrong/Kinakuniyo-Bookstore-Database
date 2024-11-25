@@ -58,7 +58,19 @@ def register_routes(app):
 
     @app.route('/books')
     def books():
-        return render_template('books.html')
+        # Fetch all books from the database
+        books = db.session.execute(text("SELECT * FROM book")).fetchall()
+        return render_template('books.html', books=books)
+    
+    @app.route('/books/<int:book_id>')
+    def book_detail(book_id):
+        # Fetch book details from the database
+        book = db.session.execute(text("SELECT * FROM book WHERE book_id = :book_id"), {'book_id': book_id}).fetchone()
+        if book:
+            return render_template('book_detail.html', book=book)
+        else:
+            flash('Book not found.', 'danger')
+            return redirect(url_for('books'))
 
     @app.route('/customer/profile')
     def customer_profile():
