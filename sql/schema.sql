@@ -1,15 +1,5 @@
 -- Schema for Kinokuniya Bookstore Database
 
--- 1. Membership Table
-DROP TABLE IF EXISTS Membership CASCADE;
-CREATE TABLE Membership (
-    membership_id SERIAL PRIMARY KEY,
-    membership_status VARCHAR(50) UNIQUE NOT NULL CHECK (
-        membership_status IN ('Regular', 'Silver', 'Gold', 'Platinum')
-        ),
-    discount_rate DECIMAL(3, 2) DEFAULT 0.00
-);
-
 -- 2. Customer Table
 DROP TABLE IF EXISTS Customer CASCADE;
 CREATE TABLE Customer (
@@ -22,10 +12,40 @@ CREATE TABLE Customer (
     address TEXT,
     date_of_birth DATE,
     loyalty_points INTEGER DEFAULT 0,
-    membership_id INTEGER REFERENCES Membership(membership_id) ON DELETE SET NULL DEFAULT 1,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(100) NOT NULL
+    password VARCHAR(100) NOT NULL,
+    membership_type VARCHAR(50) NOT NULL CHECK (membership_type IN ('Regular', 'Silver', 'Gold', 'Platinum'))
 );
+
+-- Regular Membership Table
+DROP TABLE IF EXISTS Regular CASCADE;
+CREATE TABLE Regular (
+    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE
+) INHERITS (Customer);
+
+-- Silver Membership Table
+DROP TABLE IF EXISTS Silver CASCADE;
+CREATE TABLE Silver (
+    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    discount_rate DECIMAL(3, 2) DEFAULT 0.05
+) INHERITS (Customer);
+
+-- Gold Membership Table
+DROP TABLE IF EXISTS Gold CASCADE;
+CREATE TABLE Gold (
+    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    discount_rate DECIMAL(3, 2) DEFAULT 0.10,
+    shipping_discount DECIMAL(3, 2) DEFAULT 0.25
+) INHERITS (Customer);
+
+-- Platinum Membership Table
+DROP TABLE IF EXISTS Platinum CASCADE;
+CREATE TABLE Platinum (
+    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    discount_rate DECIMAL(3, 2) DEFAULT 0.15,
+    free_shipping BOOLEAN DEFAULT TRUE
+) INHERITS (Customer);
+
 
 -- 3. Book Table
 DROP TABLE IF EXISTS Book CASCADE;

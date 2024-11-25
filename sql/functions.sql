@@ -12,7 +12,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM customer WHERE customer.username = p_username) THEN
         RAISE EXCEPTION 'Username already exists.';
     ELSE
-        INSERT INTO customer (username, password, first_name, last_name) VALUES (p_username, crypt(p_password, gen_salt('bf')), p_first_name, p_last_name);
+        INSERT INTO customer (username, password, first_name, last_name, membership_type) VALUES (p_username, crypt(p_password, gen_salt('bf')), p_first_name, p_last_name, 'Regular'); -- Default membership
     END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -55,7 +55,8 @@ CREATE OR REPLACE FUNCTION update_customer(
     p_email VARCHAR,
     p_phone_number VARCHAR,
     p_address TEXT,
-    p_date_of_birth DATE
+    p_date_of_birth DATE,
+    p_membership_type VARCHAR
 ) RETURNS VOID AS $$
 BEGIN
     UPDATE customer
@@ -65,75 +66,34 @@ BEGIN
         email = p_email,
         phone_number = p_phone_number,
         address = p_address,
-        date_of_birth = p_date_of_birth
+        date_of_birth = p_date_of_birth,
+        membership_type = p_membership_type
     WHERE username = p_username;
 END;
 $$ LANGUAGE plpgsql;
 
 
 -- Get membership details
+-- DROP FUNCTION get_membership_details(character varying)
 CREATE OR REPLACE FUNCTION get_membership_details(p_username VARCHAR)
     RETURNS TABLE (
                       loyalty_points INTEGER,
                       discount_rate NUMERIC,
-                      membership_status VARCHAR
+                      membership_status VARCHAR,
+                      shipping_discount NUMERIC,
+                      free_shipping BOOLEAN
                   ) AS $$
 BEGIN
     RETURN QUERY
-        SELECT c.loyalty_points, m.discount_rate, m.membership_status
+        SELECT c.loyalty_points,
+               COALESCE(s.discount_rate, g.discount_rate, p.discount_rate, 0) AS discount_rate,
+               c.membership_type AS membership_status,
+               COALESCE(g.shipping_discount, 0) AS shipping_discount,
+               COALESCE(p.free_shipping, FALSE) AS free_shipping
         FROM customer c
-                 JOIN membership m ON c.membership_id = m.membership_id
+                 LEFT JOIN Silver s ON c.customer_id = s.customer_id
+                 LEFT JOIN Gold g ON c.customer_id = g.customer_id
+                 LEFT JOIN Platinum p ON c.customer_id = p.customer_id
         WHERE c.username = p_username;
 END;
 $$ LANGUAGE plpgsql;
-
-
--- Reset loyalty points for all customers
-CREATE OR REPLACE FUNCTION reset_loyalty_points()
-    RETURNS VOID AS $$
-BEGIN
-    UPDATE customer
-    SET loyalty_points = 0,
-        membership_id = 1 -- Reset to Regular membership
-    WHERE '1' = '1';
-END;
-$$ LANGUAGE plpgsql;
-
-
--- Update loyalty points and membership status when a book is purchased
-CREATE OR REPLACE FUNCTION update_loyalty_points(p_customer_id INTEGER)
-    RETURNS VOID AS $$
-DECLARE
-    current_points INTEGER;
-BEGIN
-    -- Increase loyalty points by 5
-    UPDATE customer
-    SET loyalty_points = loyalty_points + 5
-    WHERE customer_id = p_customer_id;
-
-    -- Get the updated loyalty points
-    SELECT loyalty_points INTO current_points
-    FROM customer
-    WHERE customer_id = p_customer_id;
-
-    -- Update membership status based on loyalty points
-    IF current_points <= 25 THEN
-        UPDATE customer
-        SET membership_id = 1 -- Regular
-        WHERE customer_id = p_customer_id;
-    ELSIF current_points <= 50 THEN
-        UPDATE customer
-        SET membership_id = 2 -- Silver
-        WHERE customer_id = p_customer_id;
-    ELSIF current_points <= 75 THEN
-        UPDATE customer
-        SET membership_id = 3 -- Gold
-        WHERE customer_id = p_customer_id;
-    ELSE
-        UPDATE customer
-        SET membership_id = 4 -- Platinum
-        WHERE customer_id = p_customer_id;
-    END IF;
-END;
-$$ LANGUAGE plpgsql;
-
