@@ -19,7 +19,7 @@ def register_routes(app):
             try:
                 # Call PL/pgSQL function to create a new user
                 db.session.execute(text("SELECT create_customer(:username, :password, :first_name, :last_name)"),
-                                   {'username': username, 'password': password, 'first_name': first_name, 'last_name': last_name})
+                                {'username': username, 'password': password, 'first_name': first_name, 'last_name': last_name})
                 db.session.commit()
                 flash('Account created successfully. Please login.')
                 return redirect(url_for('login'))
@@ -131,12 +131,17 @@ def register_routes(app):
         
         username = session['username']
 
-        # Retrieve loyalty points and discount rate from the database
-        membership_details = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status FROM get_membership_details(:username)"),
+        # Retrieve loyalty points, discount rate, and membership status from the database
+        membership_details = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status, shipping_discount, free_shipping FROM get_membership_details(:username)"),
                                                 {'username': username}).fetchone()
 
         if membership_details:
-            return render_template('membership.html', loyalty_points=membership_details.loyalty_points, discount_rate=membership_details.discount_rate, membership_status=membership_details.membership_status)
+            return render_template('membership.html', 
+                                loyalty_points=membership_details.loyalty_points, 
+                                discount_rate=membership_details.discount_rate, 
+                                membership_status=membership_details.membership_status,
+                                shipping_discount=membership_details.shipping_discount,
+                                free_shipping=membership_details.free_shipping)
         else:
             flash('Membership details not found.', 'danger')
             return redirect(url_for('customer_profile'))

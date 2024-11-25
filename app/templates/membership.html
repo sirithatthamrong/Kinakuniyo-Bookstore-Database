@@ -4,4 +4,12 @@
 <p>Membership Status: {{ membership_status }}</p>
 <p>Loyalty Points: {{ loyalty_points }}</p>
 <p>Discount Rate: {{ discount_rate }}%</p>
+{% if shipping_discount %}
+<p>Shipping Discount: {{ shipping_discount * 100 }}%</p>
+{% endif %}
+{% if free_shipping %}
+<p>Free Shipping: Yes</p>
+{% else %}
+<p>Free Shipping: No</p>
+{% endif %}
 {% endblock %}
