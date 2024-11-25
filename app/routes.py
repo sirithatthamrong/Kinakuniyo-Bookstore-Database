@@ -62,15 +62,47 @@ def register_routes(app):
         books = db.session.execute(text("SELECT * FROM book")).fetchall()
         return render_template('books.html', books=books)
     
-    @app.route('/books/<int:book_id>')
+    @app.route('/books/<int:book_id>', methods=['GET'])
     def book_detail(book_id):
         # Fetch book details from the database
         book = db.session.execute(text("SELECT * FROM book WHERE book_id = :book_id"), {'book_id': book_id}).fetchone()
+        reviews = db.session.execute(text("SELECT * FROM review WHERE book_id = :book_id ORDER BY review_date DESC"), {'book_id': book_id}).fetchall()
+
         if book:
-            return render_template('book_detail.html', book=book)
+            return render_template('book_detail.html', book=book, reviews=reviews)
         else:
             flash('Book not found.', 'danger')
             return redirect(url_for('books'))
+        
+    @app.route('/books/<int:book_id>/add_review', methods=['POST'])
+    def add_review(book_id):
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+
+        username = session['username']
+        rating = request.form['rating']
+        review_text = request.form['review_text']
+
+        # Get customer ID
+        customer = db.session.execute(text("SELECT customer_id FROM customer WHERE username = :username"), {'username': username}).fetchone()
+        if not customer:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('books'))
+
+        customer_id = customer.customer_id
+
+        try:
+            # Call PL/pgSQL function to add or update review
+            db.session.execute(text("SELECT add_or_update_review(:customer_id, :book_id, :rating, :review_text)"),
+                            {'customer_id': customer_id, 'book_id': book_id, 'rating': rating, 'review_text': review_text})
+            db.session.commit()
+            flash('Review submitted successfully.')
+            return redirect(url_for('book_detail', book_id=book_id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('book_detail', book_id=book_id))
 
     @app.route('/customer/profile')
     def customer_profile():

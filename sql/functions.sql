@@ -97,3 +97,27 @@ BEGIN
         WHERE c.username = p_username;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Add or update review
+CREATE OR REPLACE FUNCTION add_or_update_review(
+    p_customer_id INTEGER,
+    p_book_id INTEGER,
+    p_rating INTEGER,
+    p_review_text TEXT
+) RETURNS VOID AS $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM review WHERE customer_id = p_customer_id AND book_id = p_book_id) THEN
+        -- Update existing review
+        UPDATE review
+        SET rating = p_rating,
+            review_text = p_review_text,
+            review_date = CURRENT_TIMESTAMP
+        WHERE customer_id = p_customer_id AND book_id = p_book_id;
+    ELSE
+        -- Insert new review
+        INSERT INTO review (customer_id, book_id, rating, review_text, review_date)
+        VALUES (p_customer_id, p_book_id, p_rating, p_review_text, CURRENT_TIMESTAMP);
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
