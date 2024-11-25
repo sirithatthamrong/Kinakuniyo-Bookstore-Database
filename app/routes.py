@@ -154,13 +154,79 @@ def register_routes(app):
             flash('Customer not found.', 'danger')
             return redirect(url_for('customer_profile'))
     
+    @app.route('/customer/profile/wishlist', methods=['GET'])
+    def wishlist():
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+
+        username = session['username']
+
+        # Fetch all wishlist books for the customer using PL/pgSQL function
+        wishlist = db.session.execute(text("SELECT * FROM get_customer_wishlist(:username)"), {'username': username}).fetchall()
+
+        return render_template('wishlist.html', wishlist=wishlist)
+
+
+    @app.route('/customer/profile/wishlist/add_book/<int:book_id>', methods=['POST'])
+    def add_book_to_wishlist(book_id):
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+
+        username = session['username']
+
+        # Get customer ID
+        customer = db.session.execute(text("SELECT customer_id FROM customer WHERE username = :username"), {'username': username}).fetchone()
+        if not customer:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('books'))
+
+        customer_id = customer.customer_id
+
+        try:
+            # Call PL/pgSQL function to add book to wishlist
+            db.session.execute(text("SELECT add_book_to_wishlist(:customer_id, :book_id)"),
+                            {'customer_id': customer_id, 'book_id': book_id})
+            db.session.commit()
+            flash('Book added to wishlist successfully.')
+            return redirect(url_for('books'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('books'))
+
+    @app.route('/customer/profile/wishlist/remove_book/<int:book_id>', methods=['POST'])
+    def remove_book_from_wishlist(book_id):
+        if 'username' not in session:
+            flash("You need to log in first", "warning")
+            return redirect(url_for('login'))
+
+        username = session['username']
+
+        # Get customer ID
+        customer = db.session.execute(text("SELECT customer_id FROM customer WHERE username = :username"), {'username': username}).fetchone()
+        if not customer:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('wishlist'))
+
+        customer_id = customer.customer_id
+
+        try:
+            # Call PL/pgSQL function to remove book from wishlist
+            db.session.execute(text("SELECT remove_book_from_wishlist(:customer_id, :book_id)"),
+                            {'customer_id': customer_id, 'book_id': book_id})
+            db.session.commit()
+            flash('Book removed from wishlist successfully.')
+            return redirect(url_for('wishlist'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('wishlist'))
+
     @app.route('/customer/profile/orders')
     def orders():
         return render_template('orders.html')
-    
-    @app.route('/customer/profile/wishlist')
-    def wishlist():
-        return render_template('wishlist.html')
     
     @app.route('/customer/profile/cart')   
     def cart():
