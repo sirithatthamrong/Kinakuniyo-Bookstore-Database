@@ -9,11 +9,15 @@
         <p><strong>Author:</strong> {{ book.author }}</p>
         <p><strong>Genre:</strong> {{ book.genre }}</p>
         <p><strong>Quantity:</strong> {{book.quantity}}</p>
-        <p><strong>Total Price:</strong> {{ book.price }}</p>
+        <p><strong>Price:</strong> {{book.price}}</p>
+        <p><strong>Total Price:</strong> {{ book.total_price }}</p>
         <form action="{{ url_for('remove_book_from_cart', book_id=book.book_id) }}" method="POST">
             <button type="submit">Remove from Cart</button>
         </form>
     </div>
     {% endfor %}
+    <div class="cart-total">
+        <h2><strong>Total price:</strong> {{total_price}}</h2>
+    </div>
 </div>
 {% endblock %}

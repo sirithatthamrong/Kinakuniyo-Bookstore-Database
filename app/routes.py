@@ -199,13 +199,14 @@ def register_routes(app):
         customer_id = get_customer_id(username)
 
         cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
-        print(cart)
-        return render_template('cart.html', cart=cart)
+        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchall()[0][0]
+        return render_template('cart.html', cart=cart, total_price=total_price)
 
     @app.route('/customer/profile/cart/add_book/<int:book_id>', methods=['POST'])    
     def add_book_to_cart(book_id):
         username = require_login()
 
+        book_quantity=request.form['cart_quantity']
         customer_id = get_customer_id(username)
         if not customer_id:
             flash('Customer not found.', 'danger')
@@ -217,7 +218,7 @@ def register_routes(app):
                 db.session.execute(text("SELECT create_new_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
                 db.session.commit()
                 print("New cart created!")
-            db.session.execute(text("SELECT add_book_to_customer_cart(:customer_id, :book_id)"), {'customer_id': customer_id, 'book_id': book_id}).fetchall()
+            db.session.execute(text("SELECT add_book_to_customer_cart(:customer_id, :book_id, :book_quantity)"), {'customer_id': customer_id, 'book_id': book_id, 'book_quantity': book_quantity}).fetchall()
             db.session.commit()
             flash('Book added to cart successfully.')
             return redirect(url_for('cart'))

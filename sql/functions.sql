@@ -191,11 +191,12 @@ RETURNS TABLE (
     author VARCHAR,
     genre VARCHAR,
     quantity INTEGER,
-    price MONEY
+    price MONEY,
+    total_price MONEY
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT i.book_id, b.title, b.author, b.genre, i.quantity, i.price
+    SELECT i.book_id, b.title, b.author, b.genre, i.quantity, i.price, i.price*i.quantity
     FROM shopping_cart c
     JOIN shopping_cart_item i ON c.cart_id = i.cart_id
     JOIN book b on b.book_id = i.book_id
@@ -220,7 +221,8 @@ ADD ITEM TO CUSTOMER CART FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION add_book_to_customer_cart(
     p_customer_id INTEGER,
-    p_book_id INTEGER)
+    p_book_id INTEGER,
+    p_book_quantity INTEGER)
 RETURNS VOID AS $$
 DECLARE
     customer_cart INTEGER;
@@ -239,7 +241,7 @@ BEGIN
     SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
 
     INSERT INTO shopping_cart_item (cart_id, book_id, quantity, price)
-    VALUES (customer_cart, p_book_id, 1, book_price);
+    VALUES (customer_cart, p_book_id, p_book_quantity, book_price);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -253,5 +255,18 @@ BEGIN
     SELECT cart_id INTO customer_cart FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id;
     DELETE FROM shopping_cart_item
     WHERE cart_id = customer_cart AND book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_customer_cart_total(p_customer_id INTEGER)
+RETURNS TABLE (
+    total MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT sum(i.price*i.quantity)
+    FROM shopping_cart c
+    JOIN shopping_cart_item i ON c.cart_id = i.cart_id
+    WHERE c.customer_id =  p_customer_id;
 END;
 $$ LANGUAGE plpgsql;
