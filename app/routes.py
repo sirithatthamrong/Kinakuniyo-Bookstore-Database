@@ -194,8 +194,7 @@ def register_routes(app):
     def cart():
 
         username = require_login()
-
-
+        
         customer_id = get_customer_id(username)
 
         cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
@@ -264,6 +263,13 @@ def register_routes(app):
         else:
             flash('Membership details not found.', 'danger')
             return redirect(url_for('customer_profile'))
+        
+    @app.route('/customer/profile/cart/checkout')
+    def checkout():
+        username = require_login()
+        
+        customer_id = get_customer_id(username)
+
 
     @app.route('/sitemap')
     def sitemap_html():
