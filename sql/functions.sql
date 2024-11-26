@@ -179,3 +179,73 @@ BEGIN
     WHERE w.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
 END;
 $$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+GET CUSTOMER CART FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_cart(p_username VARCHAR)
+RETURNS TABLE (
+    cart_id INTEGER,
+    book_id INTEGER,
+    quantity INTEGER,
+    price MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT c.cart_id, i.book_id, i.quantity, i.price
+    FROM shopping_cart c
+    JOIN shopping_cart_item i ON c.cart_id = i.book_id
+    WHERE c.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+CREATE NEW CUSTOMER CART
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION create_new_cart(
+    p_customer_id VARCHAR)
+RETURNS VOID AS $$
+BEGIN
+    INSERT INTO shopping_cart (customer_id, created_date)
+    VALUES (p_customer_id, CURRENT_TIMESTAMP);
+END;
+$$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+GET ITEM PRICE BY BOOK_ID FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_book_price(
+    p_book_id INTEGER)
+RETURNS TABLE(
+    price MONEY
+) AS $$
+BEGIN
+    RETURN QUERY SELECT price AS book_price FROM book WHERE book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+ADD ITEM TO CUSTOMER CART FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_book_to_customer_cart(
+    p_customer_id VARCHAR,
+    p_book_id INTEGER)
+RETURNS VOID AS $$
+DECLARE
+    customer_cart INTEGER;
+    book_price MONEY;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id) THEN
+        SELECT create_new_cart(p_customer_id);
+    END IF;
+
+
+    SELECT cart_id INTO customer_cart FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id;
+    SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
+
+    INSERT INTO shopping_cart_item (cart_id, book_id, quantity, price)
+    VALUES (customer_cart, p_book_id, 1, book_price);
+END;
+$$ LANGUAGE plpgsql;
