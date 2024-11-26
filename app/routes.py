@@ -195,7 +195,11 @@ def register_routes(app):
 
         username = require_login()
 
-        cart = db.session.execute(text("SELECT * FROM get_customer_cart(:username)"), {'username': username}).fetchall()
+
+        customer_id = get_customer_id(username)
+
+        cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        print(cart)
         return render_template('cart.html', cart=cart)
 
     @app.route('/customer/profile/cart/add_book/<int:book_id>', methods=['POST'])    
@@ -208,6 +212,11 @@ def register_routes(app):
             return redirect(url_for('books'))
 
         try:
+            cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+            if not cart:
+                db.session.execute(text("SELECT create_new_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+                db.session.commit()
+                print("New cart created!")
             db.session.execute(text("SELECT add_book_to_customer_cart(:customer_id, :book_id)"), {'customer_id': customer_id, 'book_id': book_id}).fetchall()
             db.session.commit()
             flash('Book added to cart successfully.')
@@ -215,8 +224,27 @@ def register_routes(app):
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {e}')
-            print(f'Error: {e}')
             return redirect(url_for('books'))
+    
+    @app.route('/customer/profile/cart/remove_book/<int:book_id>', methods=['POST'])
+    def remove_book_from_cart(book_id):
+        username = require_login()
+
+        customer_id = get_customer_id(username)
+        if not customer_id:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('home'))
+
+        try:
+            db.session.execute(text("SELECT remove_book_from_customer_cart(:customer_id, :book_id)"),
+                               {'customer_id': customer_id, 'book_id': book_id})
+            db.session.commit()
+            flash('Book removed from cart successfully.')
+            return redirect(url_for('cart'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('cart'))
         
     @app.route('/customer/profile/membership')
     def membership():
