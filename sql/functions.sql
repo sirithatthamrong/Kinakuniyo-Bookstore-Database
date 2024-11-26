@@ -186,16 +186,19 @@ GET CUSTOMER CART FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_customer_cart(p_username VARCHAR)
 RETURNS TABLE (
-    cart_id INTEGER,
     book_id INTEGER,
+    title VARCHAR,
+    author VARCHAR,
+    genre VARCHAR,
     quantity INTEGER,
     price MONEY
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT c.cart_id, i.book_id, i.quantity, i.price
+    SELECT i.book_id, b.title, b.author, b.genre, i.quantity, i.price
     FROM shopping_cart c
     JOIN shopping_cart_item i ON c.cart_id = i.book_id
+    JOIN book b on b.book_id = i.book_id
     WHERE c.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
 END;
 $$ LANGUAGE plpgsql;
@@ -204,7 +207,7 @@ $$ LANGUAGE plpgsql;
 CREATE NEW CUSTOMER CART
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION create_new_cart(
-    p_customer_id VARCHAR)
+    p_customer_id INTEGER)
 RETURNS VOID AS $$
 BEGIN
     INSERT INTO shopping_cart (customer_id, created_date)
@@ -230,7 +233,7 @@ $$ LANGUAGE plpgsql;
 ADD ITEM TO CUSTOMER CART FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION add_book_to_customer_cart(
-    p_customer_id VARCHAR,
+    p_customer_id INTEGER,
     p_book_id INTEGER)
 RETURNS VOID AS $$
 DECLARE
@@ -241,8 +244,12 @@ BEGIN
         SELECT create_new_cart(p_customer_id);
     END IF;
 
-
     SELECT cart_id INTO customer_cart FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id;
+
+    IF EXISTS (SELECT 1 FROM shopping_cart_item WHERE shopping_cart_item.cart_id = customer_cart AND shopping_cart_item.book_id = p_book_id) THEN
+        RAISE EXCEPTION 'Book already in cart.';
+    end if;
+
     SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
 
     INSERT INTO shopping_cart_item (cart_id, book_id, quantity, price)

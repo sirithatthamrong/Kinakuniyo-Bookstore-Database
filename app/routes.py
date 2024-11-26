@@ -192,8 +192,32 @@ def register_routes(app):
 
     @app.route('/customer/profile/cart')
     def cart():
-        return render_template('cart.html')
 
+        username = require_login()
+
+        cart = db.session.execute(text("SELECT * FROM get_customer_cart(:username)"), {'username': username}).fetchall()
+        return render_template('cart.html', cart=cart)
+
+    @app.route('/customer/profile/cart/add_book/<int:book_id>', methods=['POST'])    
+    def add_book_to_cart(book_id):
+        username = require_login()
+
+        customer_id = get_customer_id(username)
+        if not customer_id:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('books'))
+
+        try:
+            db.session.execute(text("SELECT add_book_to_customer_cart(:customer_id, :book_id)"), {'customer_id': customer_id, 'book_id': book_id}).fetchall()
+            db.session.commit()
+            flash('Book added to cart successfully.')
+            return redirect(url_for('cart'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            print(f'Error: {e}')
+            return redirect(url_for('books'))
+        
     @app.route('/customer/profile/membership')
     def membership():
         username = require_login()
