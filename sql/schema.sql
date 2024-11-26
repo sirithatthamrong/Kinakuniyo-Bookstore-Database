@@ -192,8 +192,7 @@ DROP TABLE IF EXISTS Shopping_Cart CASCADE;
 CREATE TABLE Shopping_Cart (
     cart_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total_amount MONEY NOT NULL
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 
