@@ -179,3 +179,41 @@ BEGIN
     WHERE w.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
 END;
 $$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+UPDATE CUSTOMER LOYALTY POINTS AND RANK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION update_customer_points_and_rank(p_customer_id INTEGER)
+RETURNS VOID AS $$
+DECLARE
+    current_points INTEGER;
+    new_rank VARCHAR;
+BEGIN
+    -- Increase points by 5
+    UPDATE customer
+    SET loyalty_points = loyalty_points + 5
+    WHERE customer_id = p_customer_id;
+
+    -- Get the updated points
+    SELECT loyalty_points INTO current_points
+    FROM customer
+    WHERE customer_id = p_customer_id;
+
+    -- Determine the new rank based on points
+    IF current_points <= 25 THEN
+        new_rank := 'Regular';
+    ELSIF current_points <= 50 THEN
+        new_rank := 'Silver';
+    ELSIF current_points <= 70 THEN
+        new_rank := 'Gold';
+    ELSE
+        new_rank := 'Platinum';
+    END IF;
+
+    -- Update the rank
+    UPDATE customer
+    SET membership_type = new_rank
+    WHERE customer_id = p_customer_id;
+END;
+$$ LANGUAGE plpgsql;
