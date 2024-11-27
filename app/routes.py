@@ -192,8 +192,60 @@ def register_routes(app):
 
     @app.route('/customer/profile/cart')
     def cart():
-        return render_template('cart.html')
 
+        username = require_login()
+        
+        customer_id = get_customer_id(username)
+
+        cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchall()[0][0]
+        return render_template('cart.html', cart=cart, total_price=total_price)
+
+    @app.route('/customer/profile/cart/add_book/<int:book_id>', methods=['POST'])    
+    def add_book_to_cart(book_id):
+        username = require_login()
+
+        book_quantity=request.form['cart_quantity']
+        customer_id = get_customer_id(username)
+        if not customer_id:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('books'))
+
+        try:
+            cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+            if not cart:
+                db.session.execute(text("SELECT create_new_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+                db.session.commit()
+                print("New cart created!")
+            db.session.execute(text("SELECT add_book_to_customer_cart(:customer_id, :book_id, :book_quantity)"), {'customer_id': customer_id, 'book_id': book_id, 'book_quantity': book_quantity}).fetchall()
+            db.session.commit()
+            flash('Book added to cart successfully.')
+            return redirect(url_for('cart'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('books'))
+    
+    @app.route('/customer/profile/cart/remove_book/<int:book_id>', methods=['POST'])
+    def remove_book_from_cart(book_id):
+        username = require_login()
+
+        customer_id = get_customer_id(username)
+        if not customer_id:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('home'))
+
+        try:
+            db.session.execute(text("SELECT remove_book_from_customer_cart(:customer_id, :book_id)"),
+                               {'customer_id': customer_id, 'book_id': book_id})
+            db.session.commit()
+            flash('Book removed from cart successfully.')
+            return redirect(url_for('cart'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('cart'))
+        
     @app.route('/customer/profile/membership')
     def membership():
         username = require_login()
@@ -211,6 +263,13 @@ def register_routes(app):
         else:
             flash('Membership details not found.', 'danger')
             return redirect(url_for('customer_profile'))
+        
+    @app.route('/customer/profile/cart/checkout')
+    def checkout():
+        username = require_login()
+        
+        customer_id = get_customer_id(username)
+
 
     @app.route('/sitemap')
     def sitemap_html():

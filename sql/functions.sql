@@ -215,5 +215,96 @@ BEGIN
     UPDATE customer
     SET membership_type = new_rank
     WHERE customer_id = p_customer_id;
+GET CUSTOMER CART FUNCTION
+
+
+
+/****************************************************************************************
+GET CUSTOMER CART
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_cart(p_customer_id INTEGER)
+RETURNS TABLE (
+    book_id INTEGER,
+    title VARCHAR,
+    author VARCHAR,
+    genre VARCHAR,
+    quantity INTEGER,
+    price MONEY,
+    total_price MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT i.book_id, b.title, b.author, b.genre, i.quantity, i.price, i.price*i.quantity
+    FROM shopping_cart c
+    JOIN shopping_cart_item i ON c.cart_id = i.cart_id
+    JOIN book b on b.book_id = i.book_id
+    WHERE c.customer_id =  p_customer_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+CREATE NEW CUSTOMER CART
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION create_new_cart(
+    p_customer_id INTEGER)
+RETURNS VOID AS $$
+BEGIN
+    INSERT INTO shopping_cart (customer_id, created_date)
+    VALUES (p_customer_id, CURRENT_TIMESTAMP);
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+ADD ITEM TO CUSTOMER CART FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_book_to_customer_cart(
+    p_customer_id INTEGER,
+    p_book_id INTEGER,
+    p_book_quantity INTEGER)
+RETURNS VOID AS $$
+DECLARE
+    customer_cart INTEGER;
+    book_price MONEY;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id) THEN
+        SELECT create_new_cart(p_customer_id);
+    END IF;
+
+    SELECT cart_id INTO customer_cart FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id;
+
+    IF EXISTS (SELECT 1 FROM shopping_cart_item WHERE shopping_cart_item.cart_id = customer_cart AND shopping_cart_item.book_id = p_book_id) THEN
+        RAISE EXCEPTION 'Book already in cart.';
+    end if;
+
+    SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
+
+    INSERT INTO shopping_cart_item (cart_id, book_id, quantity, price)
+    VALUES (customer_cart, p_book_id, p_book_quantity, book_price);
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION remove_book_from_customer_cart(
+    p_customer_id INTEGER,
+    p_book_id INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    customer_cart INTEGER;
+BEGIN
+    SELECT cart_id INTO customer_cart FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id;
+    DELETE FROM shopping_cart_item
+    WHERE cart_id = customer_cart AND book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_customer_cart_total(p_customer_id INTEGER)
+RETURNS TABLE (
+    total MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT sum(i.price*i.quantity)
+    FROM shopping_cart c
+    JOIN shopping_cart_item i ON c.cart_id = i.cart_id
+    WHERE c.customer_id =  p_customer_id;
 END;
 $$ LANGUAGE plpgsql;

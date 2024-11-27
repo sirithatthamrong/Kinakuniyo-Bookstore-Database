@@ -1,0 +1,26 @@
+{% extends 'customer_profile.html' %}
+{% block profile_content %}
+<h3>Shopping Cart</h3>
+
+<div class="cart-list">
+    {% for book in cart %}
+    <div class="cart-book-item">
+        <h5>{{ book.title }}</h5>
+        <p><strong>Author:</strong> {{ book.author }}</p>
+        <p><strong>Genre:</strong> {{ book.genre }}</p>
+        <p><strong>Quantity:</strong> {{book.quantity}}</p>
+        <p><strong>Price:</strong> {{book.price}}</p>
+        <p><strong>Total Price:</strong> {{ book.total_price }}</p>
+        <form action="{{ url_for('remove_book_from_cart', book_id=book.book_id) }}" method="POST">
+            <button type="submit">Remove from Cart</button>
+        </form>
+    </div>
+    {% endfor %}
+    <div class="cart-total">
+        <h2><strong>Total price:</strong> {{total_price}}</h2>
+        <form action="{{ url_for('checkout') }}" method="POST">
+            <button type="submit">Checkout</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
