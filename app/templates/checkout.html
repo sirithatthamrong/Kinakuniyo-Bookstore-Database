@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block head %}
+<link rel="stylesheet" href="/static/checkout.css">
+{% endblock %}
+{% block content %}
+<div class="checkout-container">
+    <h2>Your Order</h2>
+    <div class="checkout-layout">
+        <div class="checkout-content">
+            {% block profile_content %}
+                {% for book in cart %}
+                <div class="checkout-book-item">
+                    <h5>{{ book.title }}</h5>
+                    <p><strong>Author:</strong> {{ book.author }}</p>
+                    <p><strong>Genre:</strong> {{ book.genre }}</p>
+                    <p><strong>Quantity:</strong> {{book.quantity}}</p>
+                    <p><strong>Price:</strong> {{book.price}}</p>
+                    <p><strong>Total Price:</strong> {{ book.total_price }}</p>
+                    <form action="{{ url_for('remove_book_from_cart', book_id=book.book_id) }}" method="POST">
+                        <button type="submit">Remove from Cart</button>
+                    </form>
+                </div>
+                {% endfor %}
+            {% endblock %}
+        </div>
+        <ul class="checkout-tabs">
+            <li><h3>Order Total</h3></li>
+            <li><h3>{{total_price}}</h3></li>
+            <li>
+                <form action="{{ url_for('payment') }}" method="POST">
+                    <button type="submit">Make order</button>
+                </form>
+            </li>
+            <!-- Add button to do payment -->
+        </ul>
+    </div>
+</div>
+{% endblock %}

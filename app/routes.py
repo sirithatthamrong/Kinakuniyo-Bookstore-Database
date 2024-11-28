@@ -264,12 +264,20 @@ def register_routes(app):
             flash('Membership details not found.', 'danger')
             return redirect(url_for('customer_profile'))
         
-    @app.route('/customer/profile/cart/checkout')
+    @app.route('/customer/profile/cart/checkout', methods=['POST'])
     def checkout():
         username = require_login()
         
         customer_id = get_customer_id(username)
 
+        cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchall()[0][0]
+        return render_template('checkout.html', cart = cart, total_price = total_price)
+    
+    @app.route('/customer/profile/cart/payment', methods=['POST'])
+    def payment():
+        username = require_login()
+        return render_template('home.html')
 
     @app.route('/sitemap')
     def sitemap_html():
