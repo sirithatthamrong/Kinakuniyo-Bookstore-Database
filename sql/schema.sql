@@ -60,7 +60,6 @@ CREATE TABLE Book (
     ISBN CHAR(13) UNIQUE NOT NULL,
     price MONEY NOT NULL,
     language VARCHAR(50),
-    stock_quantity INTEGER DEFAULT 0 CHECK (stock_quantity >= 0)
 );
 
 
@@ -130,9 +129,17 @@ WISHLIST TABLE
 DROP TABLE IF EXISTS Wishlist CASCADE;
 CREATE TABLE Wishlist (
     wishlist_id SERIAL PRIMARY KEY,
-    customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE
+);
+
+
+/****************************************************************************************
+WISHLIST_ITEM TABLE
+*****************************************************************************************/
+CREATE TABLE Wishlist_Item (
+    wishlist_id INTEGER REFERENCES Wishlist(wishlist_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    PRIMARY KEY (wishlist_id, book_id)
 );
 
 
