@@ -303,6 +303,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/****************************************************************************************
+REMOVE BOOK FROM CUSTOMER CART FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION remove_book_from_customer_cart(
     p_customer_id INTEGER,
     p_book_id INTEGER
@@ -316,6 +319,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/****************************************************************************************
+UPDATE BOOK QUANTITY IN CUSTOMER CART FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_customer_cart_total(p_customer_id INTEGER)
 RETURNS TABLE (
     total MONEY
@@ -326,5 +332,49 @@ BEGIN
     FROM shopping_cart c
     JOIN shopping_cart_item i ON c.cart_id = i.cart_id
     WHERE c.customer_id =  p_customer_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+ADD CATEGORY TO BOOK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_category_to_book(
+    p_book_id INTEGER,
+    p_category_id INTEGER
+) RETURNS VOID AS $$
+BEGIN
+    INSERT INTO book_category (book_id, category_id)
+    VALUES (p_book_id, p_category_id)
+    ON CONFLICT (book_id, category_id) DO NOTHING;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+REMOVE CATEGORY FROM BOOK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION remove_category_from_book(
+    p_book_id INTEGER,
+    p_category_id INTEGER
+) RETURNS VOID AS $$
+BEGIN
+    DELETE FROM book_category
+    WHERE book_id = p_book_id AND category_id = p_category_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET BOOK CATEGORIES FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_book_categories(p_book_id INTEGER)
+RETURNS TABLE (
+    category_id INTEGER,
+    category_name VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT c.category_id, c.category_name
+    FROM book_category bc
+    JOIN category c ON bc.category_id = c.category_id
+    WHERE bc.book_id = p_book_id;
 END;
 $$ LANGUAGE plpgsql;

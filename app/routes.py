@@ -71,9 +71,10 @@ def register_routes(app):
     def book_detail(book_id):
         book = db.session.execute(text("SELECT * FROM book WHERE book_id = :book_id"), {'book_id': book_id}).fetchone()
         reviews = db.session.execute(text("SELECT * FROM review WHERE book_id = :book_id ORDER BY review_date DESC"), {'book_id': book_id}).fetchall()
+        categories = db.session.execute(text("SELECT * FROM get_book_categories(:book_id)"), {'book_id': book_id}).fetchall()
 
         if book:
-            return render_template('book_detail.html', book=book, reviews=reviews)
+            return render_template('book_detail.html', book=book, reviews=reviews, categories=categories)
         else:
             flash('Book not found.', 'danger')
             return redirect(url_for('books'))

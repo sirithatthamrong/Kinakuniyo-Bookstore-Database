@@ -27,3 +27,66 @@ INSERT INTO Book (title, author, genre, publication_date, ISBN, price, language)
     ('The Maze Runner', 'James Dashner', 'Dystopian', '2009-10-06', '9780385737951', 18.99, 'English'),
     ('Divergent', 'Veronica Roth', 'Dystopian', '2011-04-25', '9780062024039', 19.99, 'English'),
     ('The Giver', 'Lois Lowry', 'Dystopian', '1993-04-26', '9780544336261', 10.99, 'English');
+
+
+-- Insert initial data into the Category table
+INSERT INTO Category (category_name) VALUES
+    ('Fiction'),
+    ('Non-Fiction'),
+    ('Fantasy'),
+    ('Science Fiction'),
+    ('Mystery'),
+    ('Thriller'),
+    ('Horror'),
+    ('Romance'),
+    ('Historical Fiction'),
+    ('Dystopian'),
+    ('Adventure'),
+    ('Biography'),
+    ('Autobiography'),
+    ('Self-Help'),
+    ('Cooking'),
+    ('Travel'),
+    ('Science'),
+    ('History'),
+    ('Art'),
+    ('Poetry'),
+    ('Religion'),
+    ('Philosophy'),
+    ('Business'),
+    ('Finance'),
+    ('Health'),
+    ('Fitness'),
+    ('Parenting'),
+    ('Education'),
+    ('Technology'),
+    ('Programming');
+
+
+-- Insert initial data into the Book_Category table
+INSERT INTO Book_Category (book_id, category_id) VALUES
+    (1, 1), -- To Kill a Mockingbird - Fiction
+    (2, 10), -- 1984 - Dystopian
+    (3, 8), -- Pride and Prejudice - Romance
+    (4, 1), -- The Great Gatsby - Fiction
+    (5, 11), -- Moby Dick - Adventure
+    (6, 9), -- War and Peace - Historical Fiction
+    (7, 1), -- The Catcher in the Rye - Fiction
+    (8, 3), -- The Hobbit - Fantasy
+    (9, 3), -- The Lord of the Rings - Fantasy
+    (10, 3), -- Harry Potter and the Sorcerer's Stone - Fantasy
+    (11, 5), -- The Da Vinci Code - Mystery
+    (12, 11), -- The Alchemist - Adventure
+    (13, 1), -- Catch-22 - Fiction
+    (14, 10), -- Brave New World - Dystopian
+    (15, 10), -- The Road - Post-apocalyptic
+    (16, 7), -- The Shining - Horror
+    (17, 10), -- The Hunger Games - Dystopian
+    (18, 8), -- The Fault in Our Stars - Romance
+    (19, 6), -- Gone Girl - Thriller
+    (20, 5), -- The Girl with the Dragon Tattoo - Mystery
+    (21, 9), -- The Book Thief - Historical Fiction
+    (22, 3), -- The Chronicles of Narnia - Fantasy
+    (23, 10), -- The Maze Runner - Dystopian
+    (24, 10), -- Divergent - Dystopian
+    (25, 10); -- The Giver - Dystopian

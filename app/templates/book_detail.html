@@ -12,6 +12,11 @@
     <p><strong>Price:</strong> {{ book.price }}</p>
     <p><strong>Language:</strong> {{ book.language }}</p>
     <p><strong>Stock Quantity:</strong> {{ book.stock_quantity }}</p>
+    <p><strong>Categories:</strong>
+        {% for category in categories %}
+            {{ category.category_name }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </p>
     {% if 'username' in session %}
     <form action="{{ url_for('add_book_to_wishlist', book_id=book.book_id) }}" method="POST">
         <button type="submit">Add to Wishlist</button>
