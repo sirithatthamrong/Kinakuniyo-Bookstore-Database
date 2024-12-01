@@ -51,7 +51,7 @@ $$ LANGUAGE plpgsql;
 
 
 /****************************************************************************************
-UPDATE CUSTOMER FUNCTION
+UPDATE CUSTOMER PERSONAL INFO FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION update_customer(
     p_username VARCHAR,
@@ -61,8 +61,7 @@ CREATE OR REPLACE FUNCTION update_customer(
     p_email VARCHAR,
     p_phone_number VARCHAR,
     p_address TEXT,
-    p_date_of_birth DATE,
-    p_membership_type VARCHAR
+    p_date_of_birth DATE
 ) RETURNS VOID AS $$
 BEGIN
     UPDATE customer
@@ -72,8 +71,7 @@ BEGIN
         email = p_email,
         phone_number = p_phone_number,
         address = p_address,
-        date_of_birth = p_date_of_birth,
-        membership_type = p_membership_type
+        date_of_birth = p_date_of_birth
     WHERE username = p_username;
 END;
 $$ LANGUAGE plpgsql;

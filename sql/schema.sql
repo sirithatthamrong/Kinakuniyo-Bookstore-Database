@@ -59,7 +59,7 @@ CREATE TABLE Book (
     publication_date DATE,
     ISBN CHAR(13) UNIQUE NOT NULL,
     price MONEY NOT NULL,
-    language VARCHAR(50),
+    language VARCHAR(50)
 );
 
 

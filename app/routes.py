@@ -120,6 +120,8 @@ def register_routes(app):
             address = request.form['address']
             date_of_birth = request.form['date_of_birth']
 
+            print(f"Updating customer: {username}, {first_name}, {middle_name}, {last_name}, {email}, {phone_number}, {address}, {date_of_birth}")
+
             try:
                 db.session.execute(text("SELECT update_customer(:username, :first_name, :middle_name, :last_name, :email, :phone_number, :address, :date_of_birth)"),
                                    {'username': username, 'first_name': first_name, 'middle_name': middle_name, 'last_name': last_name, 'email': email, 'phone_number': phone_number, 'address': address, 'date_of_birth': date_of_birth})

@@ -1,7 +1,5 @@
 -- SQL script for inserting initial/sample data
 
--- SQL script for inserting initial/sample data
-
 -- Insert initial data into the Book table
 INSERT INTO Book (title, author, genre, publication_date, ISBN, price, language) VALUES
     ('To Kill a Mockingbird', 'Harper Lee', 'Fiction', '1960-07-11', '9780061120084', 10.99, 'English'),
@@ -19,7 +17,7 @@ INSERT INTO Book (title, author, genre, publication_date, ISBN, price, language)
     ('The Catch-22', 'Joseph Heller', 'Satire', '1961-11-10', '9781451626650', 13.99, 'English'),
     ('Brave New World', 'Aldous Huxley', 'Dystopian', '1932-08-18', '9780060850524', 12.99, 'English'),
     ('The Road', 'Cormac McCarthy', 'Post-apocalyptic', '2006-09-26', '9780307387899', 14.99, 'English'),
-    ('The Shining', 'Stephen King', 'Horror', '1977-01-28', '9780307743657', 18.99, 'English', 65),
+    ('The Shining', 'Stephen King', 'Horror', '1977-01-28', '9780307743657', 18.99, 'English'),
     ('The Hunger Games', 'Suzanne Collins', 'Dystopian', '2008-09-14', '9780439023481', 19.99, 'English'),
     ('The Fault in Our Stars', 'John Green', 'Romance', '2012-01-10', '9780525478812', 17.99, 'English'),
     ('Gone Girl', 'Gillian Flynn', 'Thriller', '2012-06-05', '9780307588371', 16.99, 'English'),
