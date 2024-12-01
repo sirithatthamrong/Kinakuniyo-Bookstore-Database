@@ -137,9 +137,22 @@ CREATE OR REPLACE FUNCTION add_book_to_wishlist(
     p_customer_id INTEGER,
     p_book_id INTEGER
 ) RETURNS VOID AS $$
+DECLARE
+    customer_wishlist_id INTEGER;
 BEGIN
-    INSERT INTO wishlist (customer_id, book_id)
-    VALUES (p_customer_id, p_book_id);
+    -- Get or create the wishlist for the customer
+    SELECT w.wishlist_id INTO customer_wishlist_id
+    FROM wishlist w
+    WHERE w.customer_id = p_customer_id;
+
+    IF NOT FOUND THEN
+        INSERT INTO wishlist (customer_id) VALUES (p_customer_id) RETURNING wishlist_id INTO customer_wishlist_id;
+    END IF;
+
+    -- Add the book to the wishlist
+    INSERT INTO wishlist_item (wishlist_id, book_id)
+    VALUES (customer_wishlist_id, p_book_id)
+    ON CONFLICT (wishlist_id, book_id) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -151,9 +164,17 @@ CREATE OR REPLACE FUNCTION remove_book_from_wishlist(
     p_customer_id INTEGER,
     p_book_id INTEGER
 ) RETURNS VOID AS $$
+DECLARE
+    customer_wishlist_id INTEGER;
 BEGIN
-    DELETE FROM wishlist
-    WHERE customer_id = p_customer_id AND book_id = p_book_id;
+    -- Get the wishlist ID for the customer
+    SELECT wishlist_id INTO customer_wishlist_id
+    FROM wishlist
+    WHERE customer_id = p_customer_id;
+
+    -- Remove the book from the wishlist
+    DELETE FROM wishlist_item
+    WHERE wishlist_id = customer_wishlist_id AND book_id = p_book_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -173,7 +194,8 @@ BEGIN
     RETURN QUERY
     SELECT b.book_id, b.title, b.author, b.genre, b.price
     FROM wishlist w
-    JOIN book b ON w.book_id = b.book_id
+    JOIN wishlist_item wi ON w.wishlist_id = wi.wishlist_id
+    JOIN book b ON wi.book_id = b.book_id
     WHERE w.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
 END;
 $$ LANGUAGE plpgsql;

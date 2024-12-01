@@ -136,6 +136,7 @@ CREATE TABLE Wishlist (
 /****************************************************************************************
 WISHLIST_ITEM TABLE
 *****************************************************************************************/
+DROP TABLE IF EXISTS Wishlist_Item CASCADE;
 CREATE TABLE Wishlist_Item (
     wishlist_id INTEGER REFERENCES Wishlist(wishlist_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,

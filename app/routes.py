@@ -158,6 +158,7 @@ def register_routes(app):
             return redirect(url_for('books'))
 
         try:
+            print(f"Adding book {book_id} to wishlist for customer {customer_id}")
             db.session.execute(text("SELECT add_book_to_wishlist(:customer_id, :book_id)"),
                                {'customer_id': customer_id, 'book_id': book_id})
             db.session.commit()
@@ -165,6 +166,7 @@ def register_routes(app):
             return redirect(url_for('books'))
         except Exception as e:
             db.session.rollback()
+            print(f'Error: {e}')
             flash(f'Error: {e}')
             return redirect(url_for('books'))
 
