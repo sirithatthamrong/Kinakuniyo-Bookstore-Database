@@ -90,3 +90,31 @@ INSERT INTO Book_Category (book_id, category_id) VALUES
     (23, 10), -- The Maze Runner - Dystopian
     (24, 10), -- Divergent - Dystopian
     (25, 10); -- The Giver - Dystopian
+
+
+-- Insert initial data into the Store_Location table
+INSERT INTO Store_Location (store_name, address, phone_number, email, manager_name, hours_of_operation) VALUES
+                                                                                                            ('Central World', '999/9 Rama I Rd, Pathum Wan, Bangkok 10330', '02-640-7000', 'centralworld@kinokuniya.com', 'John Doe', '10:00 AM - 10:00 PM'),
+                                                                                                            ('Siam Paragon', '991 Rama I Rd, Pathum Wan, Bangkok 10330', '02-610-8000', 'siamparagon@kinokuniya.com', 'Jane Smith', '10:00 AM - 10:00 PM'),
+                                                                                                            ('Emquartier', '693, 695 Sukhumvit Rd, Khlong Tan Nuea, Watthana, Bangkok 10110', '02-269-1000', 'emquartier@kinokuniya.com', 'Alice Johnson', '10:00 AM - 10:00 PM');
+
+
+-- Insert initial data into the Supplier table
+INSERT INTO Supplier (location_id, supplier_name, contact_info, address, email) VALUES
+                                                                                    (1, 'Book Supplier Co., Ltd.', 'John Supplier', '123 Supplier St, Bangkok 10110', 'booksupplier@kinokuniya.com'),
+                                                                                    (2, 'Global Books Ltd.', 'Jane Supplier', '456 Global Rd, Bangkok 10220', 'globalbooks@kinokuniya.com'),
+                                                                                    (3, 'Literature Distributors Inc.', 'Alice Supplier', '789 Literature Ave, Bangkok 10330', 'literature@kinokuniya.com');
+
+
+-- Insert initial data into the Store_Inventory table
+INSERT INTO Store_Inventory (location_id, book_id, quantity) VALUES
+                                                                 (1, 1, 50), -- Central World - To Kill a Mockingbird
+                                                                 (1, 2, 30), -- Central World - 1984
+                                                                 (1, 3, 40), -- Central World - Pride and Prejudice
+                                                                 (2, 1, 5),  -- Siam Paragon - To Kill a Mockingbird
+                                                                 (2, 4, 20), -- Siam Paragon - The Great Gatsby
+                                                                 (2, 5, 25), -- Siam Paragon - Moby Dick
+                                                                 (2, 6, 15), -- Siam Paragon - War and Peace
+                                                                 (3, 7, 35), -- Emquartier - The Catcher in the Rye
+                                                                 (3, 8, 45), -- Emquartier - The Hobbit
+                                                                 (3, 9, 55); -- Emquartier - The Lord of the Rings

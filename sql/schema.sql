@@ -166,30 +166,16 @@ CREATE TABLE Book_Category (
 
 
 /****************************************************************************************
-SUPPLIER TABLE (One-to-Many with Inventory)
+SUPPLIER TABLE
 *****************************************************************************************/
 DROP TABLE IF EXISTS Supplier CASCADE;
 CREATE TABLE Supplier (
     supplier_id SERIAL PRIMARY KEY,
+    location_id INTEGER REFERENCES Store_Location(location_id) ON DELETE CASCADE,
     supplier_name VARCHAR(100) NOT NULL,
     contact_info TEXT,
     address TEXT,
     email VARCHAR(100)
-);
-
-
-/****************************************************************************************
-INVENTORY TABLE (Many-to-Many between Book and Supplier)
-*****************************************************************************************/
-DROP TABLE IF EXISTS Inventory CASCADE;
-CREATE TABLE Inventory (
-    inventory_id SERIAL PRIMARY KEY,
-    book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
-    supplier_id INTEGER REFERENCES Supplier(supplier_id) ON DELETE CASCADE,
-    quantity INTEGER NOT NULL CHECK (quantity >= 0),
-    purchase_price MONEY NOT NULL,
-    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reorder_level INTEGER DEFAULT 0 -- Minimum quantity to trigger reorder
 );
 
 
@@ -218,7 +204,7 @@ CREATE TABLE Shopping_Cart_Item (
 
 
 /****************************************************************************************
-STORE_LOCATION TABLE (One-to-Many with Store_Inventory)
+STORE_LOCATION TABLE
 *****************************************************************************************/
 DROP TABLE IF EXISTS Store_Location CASCADE;
 CREATE TABLE Store_Location (

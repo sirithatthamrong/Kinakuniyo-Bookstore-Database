@@ -378,3 +378,48 @@ BEGIN
     WHERE bc.book_id = p_book_id;
 END;
 $$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET BOOK STOCK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_book_stock(p_book_id INTEGER)
+RETURNS TABLE (
+    store_name VARCHAR,
+    address TEXT,
+    phone_number VARCHAR,
+    email VARCHAR,
+    manager_name VARCHAR,
+    hours_of_operation VARCHAR,
+    quantity INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT sl.store_name, sl.address, sl.phone_number, sl.email, sl.manager_name, sl.hours_of_operation, si.quantity
+    FROM store_location sl
+    JOIN store_inventory si ON sl.location_id = si.location_id
+    WHERE si.book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+CHECK STOCK QUANTITY FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION check_stock_quantity(
+    p_location_id INTEGER,
+    p_book_id INTEGER,
+    p_quantity INTEGER
+) RETURNS BOOLEAN AS $$
+DECLARE
+    available_quantity INTEGER;
+BEGIN
+    SELECT quantity INTO available_quantity
+    FROM store_inventory
+    WHERE location_id = p_location_id AND book_id = p_book_id;
+
+    IF available_quantity >= p_quantity THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
