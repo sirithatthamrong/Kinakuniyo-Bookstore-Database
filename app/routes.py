@@ -278,7 +278,8 @@ def register_routes(app):
 
         cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
         total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchall()[0][0]
-        return render_template('checkout.html', cart = cart, total_price = total_price)
+        locations = db.session.execute(text("SELECT location_id, store_name FROM store_location")).fetchall()
+        return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations)
     
     @app.route('/customer/profile/cart/payment', methods=['POST'])
     def payment():
