@@ -118,3 +118,8 @@ INSERT INTO Store_Inventory (location_id, book_id, quantity) VALUES
                                                                  (3, 7, 35), -- Emquartier - The Catcher in the Rye
                                                                  (3, 8, 45), -- Emquartier - The Hobbit
                                                                  (3, 9, 55); -- Emquartier - The Lord of the Rings
+
+INSERT INTO Membership_type (type_name, requirement, discount_rate, shipping_discount_rate) VALUES ('Regular', 0, 0.00, 0.00),
+                                                                                                   ('Silver', 26, 0.05, 0.00),
+                                                                                                   ('Gold', 51, 0.10, 0.25),
+                                                                                                   ('Platinum', 76, 0.15, 1.00)

@@ -204,7 +204,7 @@ def register_routes(app):
         customer_id = get_customer_id(username)
 
         cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
-        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchall()[0][0]
+        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchone()
         return render_template('cart.html', cart=cart, total_price=total_price)
 
     @app.route('/customer/profile/cart/add_book/<int:book_id>', methods=['POST'])    
@@ -256,7 +256,7 @@ def register_routes(app):
     def membership():
         username = require_login()
 
-        membership_details = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status, shipping_discount, free_shipping FROM get_membership_details(:username)"),
+        membership_details = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status, shipping_discount FROM get_membership_details(:username)"),
                                                 {'username': username}).fetchone()
 
         if membership_details:
@@ -264,8 +264,8 @@ def register_routes(app):
                                    loyalty_points=membership_details.loyalty_points,
                                    discount_rate=membership_details.discount_rate,
                                    membership_status=membership_details.membership_status,
-                                   shipping_discount=membership_details.shipping_discount,
-                                   free_shipping=membership_details.free_shipping)
+                                   shipping_discount=membership_details.shipping_discount
+                                   )
         else:
             flash('Membership details not found.', 'danger')
             return redirect(url_for('customer_profile'))
@@ -277,9 +277,11 @@ def register_routes(app):
         customer_id = get_customer_id(username)
 
         cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
-        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchall()[0][0]
+        total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchone()
+        membership = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status, shipping_discount FROM get_membership_details(:username)"),
+                                                {'username': username}).fetchone()
         locations = db.session.execute(text("SELECT location_id, store_name FROM store_location")).fetchall()
-        return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations)
+        return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations, membership = membership)
     
     @app.route('/customer/profile/cart/payment', methods=['POST'])
     def payment():

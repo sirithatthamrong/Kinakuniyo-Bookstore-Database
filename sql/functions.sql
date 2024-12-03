@@ -14,7 +14,7 @@ BEGIN
     IF EXISTS (SELECT 1 FROM customer WHERE customer.username = p_username) THEN
         RAISE EXCEPTION 'Username already exists.';
     ELSE
-        INSERT INTO customer (username, password, first_name, last_name, membership_type) VALUES (p_username, crypt(p_password, gen_salt('bf')), p_first_name, p_last_name, 'Regular'); -- Default membership
+        INSERT INTO customer (username, password, first_name, last_name, membership_type) VALUES (p_username, crypt(p_password, gen_salt('bf')), p_first_name, p_last_name, 1); -- Default membership
     END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -83,22 +83,18 @@ GET CUSTOMER DETAILS FUNCTION
 CREATE OR REPLACE FUNCTION get_membership_details(p_username VARCHAR)
     RETURNS TABLE (
                       loyalty_points INTEGER,
-                      discount_rate NUMERIC,
+                      discount_rate DECIMAL(3, 2),
                       membership_status VARCHAR,
-                      shipping_discount NUMERIC,
-                      free_shipping BOOLEAN
+                      shipping_discount DECIMAL(3, 2)
                   ) AS $$
 BEGIN
     RETURN QUERY
         SELECT c.loyalty_points,
-               COALESCE(s.discount_rate, g.discount_rate, p.discount_rate, 0) AS discount_rate,
-               c.membership_type AS membership_status,
-               COALESCE(g.shipping_discount, 0) AS shipping_discount,
-               COALESCE(p.free_shipping, FALSE) AS free_shipping
+               t.discount_rate AS discount_rate,
+               t.type_name AS membership_status,
+               t.shipping_discount_rate AS shipping_discount
         FROM customer c
-                 LEFT JOIN Silver s ON c.customer_id = s.customer_id
-                 LEFT JOIN Gold g ON c.customer_id = g.customer_id
-                 LEFT JOIN Platinum p ON c.customer_id = p.customer_id
+                 LEFT JOIN membership_type t ON c.membership_type = t.type_id
         WHERE c.username = p_username;
 END;
 $$ LANGUAGE plpgsql;
@@ -235,7 +231,8 @@ BEGIN
     UPDATE customer
     SET membership_type = new_rank
     WHERE customer_id = p_customer_id;
-GET CUSTOMER CART FUNCTION
+END;
+$$ LANGUAGE plpgsql;
 
 
 
@@ -324,14 +321,29 @@ UPDATE BOOK QUANTITY IN CUSTOMER CART FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_customer_cart_total(p_customer_id INTEGER)
 RETURNS TABLE (
-    total MONEY
+    total MONEY,
+    discount MONEY,
+    total_price MONEY
 ) AS $$
+DECLARE
+    TOTAL MONEY;
+    DISCOUNT MONEY;
 BEGIN
-    RETURN QUERY
-    SELECT sum(i.price*i.quantity)
+    SELECT sum(i.price*i.quantity) INTO TOTAL
     FROM shopping_cart c
     JOIN shopping_cart_item i ON c.cart_id = i.cart_id
     WHERE c.customer_id =  p_customer_id;
+
+    SELECT TOTAL*t.discount_rate INTO DISCOUNT
+    FROM shopping_cart c
+    JOIN customer u ON c.customer_id = u.customer_id
+    JOIN membership_type t ON t.type_id = u.membership_type
+    WHERE c.customer_id =  p_customer_id;
+
+    RETURN QUERY
+    SELECT TOTAL, DISCOUNT, TOTAL - DISCOUNT
+    FROM shopping_cart c
+    WHERE c.customer_id = p_customer_id;
 END;
 $$ LANGUAGE plpgsql;
 

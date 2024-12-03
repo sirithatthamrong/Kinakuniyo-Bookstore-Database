@@ -17,7 +17,7 @@
     </div>
     {% endfor %}
     <div class="cart-total">
-        <h2><strong>Total price:</strong> {{total_price}}</h2>
+        <h2><strong>Total price:</strong> {{total_price.total}}</h2>
         <form action="{{ url_for('checkout') }}" method="POST">
             <button type="submit">Checkout</button>
         </form>

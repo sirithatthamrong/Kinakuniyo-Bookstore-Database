@@ -17,34 +17,21 @@ CREATE TABLE Customer (
     loyalty_points INTEGER DEFAULT 0,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
-    membership_type VARCHAR(50) NOT NULL CHECK (membership_type IN ('Regular', 'Silver', 'Gold', 'Platinum'))
+    membership_type INTEGER REFERENCES Membership_Type DEFAULT 1
 );
 
 
 /****************************************************************************************
-REGULAR, SILVER, GOLD, PLATINUM MEMBERSHIP TABLES
+MEMBERSHIP TYPE TABLE
 *****************************************************************************************/
-DROP TABLE IF EXISTS Regular CASCADE;
-CREATE TABLE Regular (
-    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE
-) INHERITS (Customer);
-DROP TABLE IF EXISTS Silver CASCADE;
-CREATE TABLE Silver (
-    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE,
-    discount_rate DECIMAL(3, 2) DEFAULT 0.05
-) INHERITS (Customer);
-DROP TABLE IF EXISTS Gold CASCADE;
-CREATE TABLE Gold (
-    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE,
-    discount_rate DECIMAL(3, 2) DEFAULT 0.10,
-    shipping_discount DECIMAL(3, 2) DEFAULT 0.25
-) INHERITS (Customer);
-DROP TABLE IF EXISTS Platinum CASCADE;
-CREATE TABLE Platinum (
-    customer_id INTEGER PRIMARY KEY REFERENCES Customer(customer_id) ON DELETE CASCADE,
-    discount_rate DECIMAL(3, 2) DEFAULT 0.15,
-    free_shipping BOOLEAN DEFAULT TRUE
-) INHERITS (Customer);
+DROP TABLE IF EXISTS Membership_Type CASCADE;
+CREATE TABLE Membership_Type (
+    type_id SERIAL PRIMARY KEY,
+    type_name VARCHAR(50) NOT NULL,
+    requirement INTEGER,
+    discount_rate DECIMAL(3, 2) DEFAULT 0.00,
+    shipping_discount_rate DECIMAL(3, 2) DEFAULT 0.00
+);
 
 
 /****************************************************************************************
