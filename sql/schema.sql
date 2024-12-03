@@ -59,8 +59,7 @@ CREATE TABLE Book (
     publication_date DATE,
     ISBN CHAR(13) UNIQUE NOT NULL,
     price MONEY NOT NULL,
-    language VARCHAR(50),
-    stock_quantity INTEGER DEFAULT 0 CHECK (stock_quantity >= 0)
+    language VARCHAR(50)
 );
 
 
@@ -130,9 +129,18 @@ WISHLIST TABLE
 DROP TABLE IF EXISTS Wishlist CASCADE;
 CREATE TABLE Wishlist (
     wishlist_id SERIAL PRIMARY KEY,
-    customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE
+);
+
+
+/****************************************************************************************
+WISHLIST_ITEM TABLE
+*****************************************************************************************/
+DROP TABLE IF EXISTS Wishlist_Item CASCADE;
+CREATE TABLE Wishlist_Item (
+    wishlist_id INTEGER REFERENCES Wishlist(wishlist_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    PRIMARY KEY (wishlist_id, book_id)
 );
 
 
@@ -158,30 +166,16 @@ CREATE TABLE Book_Category (
 
 
 /****************************************************************************************
-SUPPLIER TABLE (One-to-Many with Inventory)
+SUPPLIER TABLE
 *****************************************************************************************/
 DROP TABLE IF EXISTS Supplier CASCADE;
 CREATE TABLE Supplier (
     supplier_id SERIAL PRIMARY KEY,
+    location_id INTEGER REFERENCES Store_Location(location_id) ON DELETE CASCADE,
     supplier_name VARCHAR(100) NOT NULL,
     contact_info TEXT,
     address TEXT,
     email VARCHAR(100)
-);
-
-
-/****************************************************************************************
-INVENTORY TABLE (Many-to-Many between Book and Supplier)
-*****************************************************************************************/
-DROP TABLE IF EXISTS Inventory CASCADE;
-CREATE TABLE Inventory (
-    inventory_id SERIAL PRIMARY KEY,
-    book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
-    supplier_id INTEGER REFERENCES Supplier(supplier_id) ON DELETE CASCADE,
-    quantity INTEGER NOT NULL CHECK (quantity >= 0),
-    purchase_price MONEY NOT NULL,
-    purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reorder_level INTEGER DEFAULT 0 -- Minimum quantity to trigger reorder
 );
 
 
@@ -210,7 +204,7 @@ CREATE TABLE Shopping_Cart_Item (
 
 
 /****************************************************************************************
-STORE_LOCATION TABLE (One-to-Many with Store_Inventory)
+STORE_LOCATION TABLE
 *****************************************************************************************/
 DROP TABLE IF EXISTS Store_Location CASCADE;
 CREATE TABLE Store_Location (

@@ -51,7 +51,7 @@ $$ LANGUAGE plpgsql;
 
 
 /****************************************************************************************
-UPDATE CUSTOMER FUNCTION
+UPDATE CUSTOMER PERSONAL INFO FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION update_customer(
     p_username VARCHAR,
@@ -61,8 +61,7 @@ CREATE OR REPLACE FUNCTION update_customer(
     p_email VARCHAR,
     p_phone_number VARCHAR,
     p_address TEXT,
-    p_date_of_birth DATE,
-    p_membership_type VARCHAR
+    p_date_of_birth DATE
 ) RETURNS VOID AS $$
 BEGIN
     UPDATE customer
@@ -72,8 +71,7 @@ BEGIN
         email = p_email,
         phone_number = p_phone_number,
         address = p_address,
-        date_of_birth = p_date_of_birth,
-        membership_type = p_membership_type
+        date_of_birth = p_date_of_birth
     WHERE username = p_username;
 END;
 $$ LANGUAGE plpgsql;
@@ -139,9 +137,22 @@ CREATE OR REPLACE FUNCTION add_book_to_wishlist(
     p_customer_id INTEGER,
     p_book_id INTEGER
 ) RETURNS VOID AS $$
+DECLARE
+    customer_wishlist_id INTEGER;
 BEGIN
-    INSERT INTO wishlist (customer_id, book_id)
-    VALUES (p_customer_id, p_book_id);
+    -- Get or create the wishlist for the customer
+    SELECT w.wishlist_id INTO customer_wishlist_id
+    FROM wishlist w
+    WHERE w.customer_id = p_customer_id;
+
+    IF NOT FOUND THEN
+        INSERT INTO wishlist (customer_id) VALUES (p_customer_id) RETURNING wishlist_id INTO customer_wishlist_id;
+    END IF;
+
+    -- Add the book to the wishlist
+    INSERT INTO wishlist_item (wishlist_id, book_id)
+    VALUES (customer_wishlist_id, p_book_id)
+    ON CONFLICT (wishlist_id, book_id) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -153,9 +164,17 @@ CREATE OR REPLACE FUNCTION remove_book_from_wishlist(
     p_customer_id INTEGER,
     p_book_id INTEGER
 ) RETURNS VOID AS $$
+DECLARE
+    customer_wishlist_id INTEGER;
 BEGIN
-    DELETE FROM wishlist
-    WHERE customer_id = p_customer_id AND book_id = p_book_id;
+    -- Get the wishlist ID for the customer
+    SELECT wishlist_id INTO customer_wishlist_id
+    FROM wishlist
+    WHERE customer_id = p_customer_id;
+
+    -- Remove the book from the wishlist
+    DELETE FROM wishlist_item
+    WHERE wishlist_id = customer_wishlist_id AND book_id = p_book_id;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -175,7 +194,8 @@ BEGIN
     RETURN QUERY
     SELECT b.book_id, b.title, b.author, b.genre, b.price
     FROM wishlist w
-    JOIN book b ON w.book_id = b.book_id
+    JOIN wishlist_item wi ON w.wishlist_id = wi.wishlist_id
+    JOIN book b ON wi.book_id = b.book_id
     WHERE w.customer_id = (SELECT customer_id FROM customer WHERE username = p_username);
 END;
 $$ LANGUAGE plpgsql;
@@ -283,6 +303,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/****************************************************************************************
+REMOVE BOOK FROM CUSTOMER CART FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION remove_book_from_customer_cart(
     p_customer_id INTEGER,
     p_book_id INTEGER
@@ -296,6 +319,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/****************************************************************************************
+UPDATE BOOK QUANTITY IN CUSTOMER CART FUNCTION
+*****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_customer_cart_total(p_customer_id INTEGER)
 RETURNS TABLE (
     total MONEY
@@ -306,5 +332,94 @@ BEGIN
     FROM shopping_cart c
     JOIN shopping_cart_item i ON c.cart_id = i.cart_id
     WHERE c.customer_id =  p_customer_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+ADD CATEGORY TO BOOK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_category_to_book(
+    p_book_id INTEGER,
+    p_category_id INTEGER
+) RETURNS VOID AS $$
+BEGIN
+    INSERT INTO book_category (book_id, category_id)
+    VALUES (p_book_id, p_category_id)
+    ON CONFLICT (book_id, category_id) DO NOTHING;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+REMOVE CATEGORY FROM BOOK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION remove_category_from_book(
+    p_book_id INTEGER,
+    p_category_id INTEGER
+) RETURNS VOID AS $$
+BEGIN
+    DELETE FROM book_category
+    WHERE book_id = p_book_id AND category_id = p_category_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET BOOK CATEGORIES FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_book_categories(p_book_id INTEGER)
+RETURNS TABLE (
+    category_id INTEGER,
+    category_name VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT c.category_id, c.category_name
+    FROM book_category bc
+    JOIN category c ON bc.category_id = c.category_id
+    WHERE bc.book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET BOOK STOCK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_book_stock(p_book_id INTEGER)
+RETURNS TABLE (
+    store_name VARCHAR,
+    address TEXT,
+    phone_number VARCHAR,
+    email VARCHAR,
+    manager_name VARCHAR,
+    hours_of_operation VARCHAR,
+    quantity INTEGER
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT sl.store_name, sl.address, sl.phone_number, sl.email, sl.manager_name, sl.hours_of_operation, si.quantity
+    FROM store_location sl
+    JOIN store_inventory si ON sl.location_id = si.location_id
+    WHERE si.book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+CHECK STOCK QUANTITY FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION check_stock_quantity(
+    p_location_id INTEGER,
+    p_book_id INTEGER,
+    p_quantity INTEGER
+) RETURNS BOOLEAN AS $$
+DECLARE
+    available_quantity INTEGER;
+BEGIN
+    SELECT quantity INTO available_quantity
+    FROM store_inventory
+    WHERE location_id = p_location_id AND book_id = p_book_id;
+
+    IF available_quantity >= p_quantity THEN
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;

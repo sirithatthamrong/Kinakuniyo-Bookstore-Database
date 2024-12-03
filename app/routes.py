@@ -71,9 +71,11 @@ def register_routes(app):
     def book_detail(book_id):
         book = db.session.execute(text("SELECT * FROM book WHERE book_id = :book_id"), {'book_id': book_id}).fetchone()
         reviews = db.session.execute(text("SELECT * FROM review WHERE book_id = :book_id ORDER BY review_date DESC"), {'book_id': book_id}).fetchall()
+        categories = db.session.execute(text("SELECT * FROM get_book_categories(:book_id)"), {'book_id': book_id}).fetchall()
+        stock = db.session.execute(text("SELECT * FROM get_book_stock(:book_id)"), {'book_id': book_id}).fetchall()
 
         if book:
-            return render_template('book_detail.html', book=book, reviews=reviews)
+            return render_template('book_detail.html', book=book, reviews=reviews, categories=categories, stock=stock)
         else:
             flash('Book not found.', 'danger')
             return redirect(url_for('books'))
@@ -120,6 +122,8 @@ def register_routes(app):
             address = request.form['address']
             date_of_birth = request.form['date_of_birth']
 
+            print(f"Updating customer: {username}, {first_name}, {middle_name}, {last_name}, {email}, {phone_number}, {address}, {date_of_birth}")
+
             try:
                 db.session.execute(text("SELECT update_customer(:username, :first_name, :middle_name, :last_name, :email, :phone_number, :address, :date_of_birth)"),
                                    {'username': username, 'first_name': first_name, 'middle_name': middle_name, 'last_name': last_name, 'email': email, 'phone_number': phone_number, 'address': address, 'date_of_birth': date_of_birth})
@@ -156,6 +160,7 @@ def register_routes(app):
             return redirect(url_for('books'))
 
         try:
+            print(f"Adding book {book_id} to wishlist for customer {customer_id}")
             db.session.execute(text("SELECT add_book_to_wishlist(:customer_id, :book_id)"),
                                {'customer_id': customer_id, 'book_id': book_id})
             db.session.commit()
@@ -163,6 +168,7 @@ def register_routes(app):
             return redirect(url_for('books'))
         except Exception as e:
             db.session.rollback()
+            print(f'Error: {e}')
             flash(f'Error: {e}')
             return redirect(url_for('books'))
 

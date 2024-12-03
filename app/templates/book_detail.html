@@ -11,7 +11,25 @@
     <p><strong>ISBN:</strong> {{ book.isbn }}</p>
     <p><strong>Price:</strong> {{ book.price }}</p>
     <p><strong>Language:</strong> {{ book.language }}</p>
-    <p><strong>Stock Quantity:</strong> {{ book.stock_quantity }}</p>
+    <p><strong>Categories:</strong>
+        {% for category in categories %}
+            {{ category.category_name }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </p>
+    <p><strong>Available at:</strong></p>
+    <ul>
+        {% for store in stock %}
+        <li>
+            <p><strong>Store Name:</strong> {{ store.store_name }}</p>
+            <p><strong>Address:</strong> {{ store.address }}</p>
+            <p><strong>Phone Number:</strong> {{ store.phone_number }}</p>
+            <p><strong>Email:</strong> {{ store.email }}</p>
+            <p><strong>Manager Name:</strong> {{ store.manager_name }}</p>
+            <p><strong>Hours of Operation:</strong> {{ store.hours_of_operation }}</p>
+            <p><strong>Quantity:</strong> {{ store.quantity }}</p>
+        </li>
+        {% endfor %}
+    </ul>
     {% if 'username' in session %}
     <form action="{{ url_for('add_book_to_wishlist', book_id=book.book_id) }}" method="POST">
         <button type="submit">Add to Wishlist</button>
@@ -21,17 +39,6 @@
         <button type="submit">Add to Cart</button>
     </form>
     {% endif %}
-</div>
-
-<h3>Reviews</h3>
-<div class="reviews">
-    {% for review in reviews %}
-    <div class="review-item">
-        <p><strong>Rating:</strong> {{ review.rating }} / 5</p>
-        <p>{{ review.review_text }}</p>
-        <p><em>Reviewed on {{ review.review_date }}</em></p>
-    </div>
-    {% endfor %}
 </div>
 
 {% if 'username' in session %}
@@ -52,4 +59,15 @@
 {% else %}
 <p>You need to <a href="{{ url_for('login') }}">login</a> to add a review.</p>
 {% endif %}
+
+<h3>Reviews</h3>
+<div class="reviews">
+    {% for review in reviews %}
+    <div class="review-item">
+        <p><strong>Rating:</strong> {{ review.rating }} / 5</p>
+        <p>{{ review.review_text }}</p>
+        <p><em>Reviewed on {{ review.review_date }}</em></p>
+    </div>
+    {% endfor %}
+</div>
 {% endblock %}
