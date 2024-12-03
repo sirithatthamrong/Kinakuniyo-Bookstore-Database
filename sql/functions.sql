@@ -317,6 +317,24 @@ END;
 $$ LANGUAGE plpgsql;
 
 /****************************************************************************************
+DELETE CUSTOMER CART FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE PROCEDURE delete_customer_cart(
+    p_customer_id INTEGER
+) AS $$
+DECLARE
+    cart_item RECORD;
+BEGIN
+    FOR cart_item IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
+        PERFORM remove_book_from_customer_cart(p_customer_id, cart_item.book_id);
+        end loop;
+    DELETE FROM shopping_cart
+    WHERE customer_id = p_customer_id;
+    COMMIT;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
 UPDATE BOOK QUANTITY IN CUSTOMER CART FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_customer_cart_total(p_customer_id INTEGER)
@@ -435,3 +453,25 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+COMPLETE PURCHASE FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE PROCEDURE complete_purchase(
+    p_customer_id INTEGER,
+    p_payment_method VARCHAR(50),
+    p_location VARCHAR(50)
+) AS
+    $$
+    DECLARE
+        CART_ITEM record;
+    BEGIN
+        FOR CART_ITEM IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
+            raise notice '% - %', CART_ITEM.title, CART_ITEM.quantity;
+        end loop;
+
+        SELECT update_customer_points_and_rank(p_customer_id);
+
+        COMMIT;
+    END;
+    $$ LANGUAGE plpgsql
