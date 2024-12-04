@@ -319,9 +319,23 @@ $$ LANGUAGE plpgsql;
 /****************************************************************************************
 DELETE CUSTOMER CART FUNCTION
 *****************************************************************************************/
-CREATE OR REPLACE PROCEDURE delete_customer_cart(
+-- CREATE OR REPLACE PROCEDURE delete_customer_cart(
+--     p_customer_id INTEGER
+-- ) AS $$
+-- DECLARE
+--     cart_item RECORD;
+-- BEGIN
+--     FOR cart_item IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
+--         PERFORM remove_book_from_customer_cart(p_customer_id, cart_item.book_id);
+--         end loop;
+--     DELETE FROM shopping_cart
+--     WHERE customer_id = p_customer_id;
+-- --     COMMIT;
+-- END;
+-- $$ LANGUAGE plpgsql;
+CREATE OR REPLACE FUNCTION delete_customer_cart(
     p_customer_id INTEGER
-) AS $$
+) RETURNS VOID AS $$
 DECLARE
     cart_item RECORD;
 BEGIN
@@ -330,7 +344,7 @@ BEGIN
         end loop;
     DELETE FROM shopping_cart
     WHERE customer_id = p_customer_id;
-    COMMIT;
+--     COMMIT;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -495,14 +509,26 @@ $$ LANGUAGE plpgsql;
 /****************************************************************************************
 UPDATE CUSTOMER BRANCH FUNCTION
 *****************************************************************************************/
-CREATE OR REPLACE PROCEDURE update_customer_branch(
+-- CREATE OR REPLACE PROCEDURE update_customer_branch(
+--     p_customer_id INTEGER,
+--     p_branch_id INTEGER
+-- ) AS $$
+-- BEGIN
+--     CALL delete_customer_cart(p_customer_id);
+--
+--     UPDATE customer SET branch_id = p_branch_id WHERE customer_id = p_customer_id;
+-- --     COMMIT;
+-- END;
+-- $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_customer_branch(
     p_customer_id INTEGER,
     p_branch_id INTEGER
-) AS $$
+) RETURNS VOID AS $$
 BEGIN
-    CALL delete_customer_cart(p_customer_id);
+    PERFORM delete_customer_cart(p_customer_id);
 
     UPDATE customer SET branch_id = p_branch_id WHERE customer_id = p_customer_id;
-    COMMIT;
+--     COMMIT;
 END;
 $$ LANGUAGE plpgsql;

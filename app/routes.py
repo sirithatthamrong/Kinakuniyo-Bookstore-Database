@@ -221,12 +221,17 @@ def register_routes(app):
             return redirect(url_for('login'))
         try:
             print("Hello :()")
-            db.session.execute(text("CALL update_customer_branch(:customer_id, :branch_id)"), {'customer_id': customer_id, 'branch_id': branch_id}).fetchall()
+            # raw_conn = db.session.connection().engine.raw_connection()
+            # cur = raw_conn.cursor()
+            # cur.callproc('update_customer_branch', [customer_id, branch_id])
+            # db.session.execute(text("CALL delete_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
+            db.session.execute(text("SELECT update_customer_branch(:customer_id, :branch_id)"), {'customer_id': customer_id, 'branch_id': branch_id}).fetchall()
             print("Hi!")
             db.session.commit()
             return redirect(url_for('cart'))
         except Exception as e:
             db.session.rollback()
+            print('Error: ', e)
             flash(f'Error: {e}')
             return redirect(url_for('cart'))
 
