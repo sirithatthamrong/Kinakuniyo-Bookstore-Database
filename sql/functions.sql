@@ -204,7 +204,7 @@ CREATE OR REPLACE FUNCTION update_customer_points_and_rank(p_customer_id INTEGER
 RETURNS VOID AS $$
 DECLARE
     current_points INTEGER;
-    new_rank VARCHAR;
+    new_rank INTEGER;
 BEGIN
     -- Increase points by 5
     UPDATE customer
@@ -217,14 +217,14 @@ BEGIN
     WHERE customer_id = p_customer_id;
 
     -- Determine the new rank based on points
-    IF current_points <= 25 THEN
-        new_rank := 'Regular';
-    ELSIF current_points <= 50 THEN
-        new_rank := 'Silver';
-    ELSIF current_points <= 70 THEN
-        new_rank := 'Gold';
+    IF current_points >= 76 THEN
+        new_rank := 4;
+    ELSIF current_points >= 51 THEN
+        new_rank := 3;
+    ELSIF current_points >= 26 THEN
+        new_rank := 2;
     ELSE
-        new_rank := 'Platinum';
+        new_rank := 1;
     END IF;
 
     -- Update the rank
@@ -481,20 +481,79 @@ COMPLETE PURCHASE FUNCTION
 CREATE OR REPLACE FUNCTION complete_purchase(
     p_customer_id INTEGER,
     p_payment_method VARCHAR(50),
-    p_location VARCHAR(50)
-) RETURNS BOOLEAN AS
-    $$
-    DECLARE
-        CART_ITEM record;
-    BEGIN
-        FOR CART_ITEM IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
-            raise notice '% - %', CART_ITEM.title, CART_ITEM.quantity;
-        end loop;
+    p_branch_id INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    CART_ITEM record;
+    new_order_id INTEGER;
+    cart_total MONEY;
+BEGIN
+    SELECT create_new_order(p_customer_id, p_branch_id) INTO new_order_id;
 
-        SELECT update_customer_points_and_rank(p_customer_id);
+    SELECT total_price FROM get_customer_cart_total(p_customer_id) INTO cart_total;
 
-    END;
-    $$ LANGUAGE plpgsql;
+    FOR CART_ITEM IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
+        PERFORM update_book_stock_branch(CART_ITEM.book_id, p_branch_id, CART_ITEM.quantity);
+        INSERT INTO order_item (order_id, book_id, quantity, price) VALUES (new_order_id, CART_ITEM.book_id, CART_ITEM.quantity, CART_ITEM.total_price);
+    end loop;
+
+    INSERT INTO payment (order_id, payment_method, amount, payment_date) VALUES (new_order_id, p_payment_method, cart_total, current_timestamp);
+
+    PERFORM delete_customer_cart(p_branch_id);
+    PERFORM update_customer_points_and_rank(p_customer_id);
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+CREATE NEW ORDER FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION create_new_order(
+    p_customer_id INTEGER,
+    p_branch_id INTEGER)
+RETURNS INTEGER AS $$
+DECLARE
+    order_total MONEY;
+    branch_name TEXT;
+    new_order_id INTEGER;
+BEGIN
+
+    SELECT total_price INTO order_total FROM get_customer_cart_total(p_customer_id);
+
+    SELECT store_name INTO branch_name FROM store_location WHERE location_id = p_branch_id;
+
+    INSERT INTO orders (customer_id, order_date, total_price, status, shipping_address, delivery_date)
+    VALUES (
+            p_customer_id, CURRENT_TIMESTAMP, order_total,
+            'Processing', branch_name, CURRENT_TIMESTAMP + INTERVAL '1' DAY);
+
+    SELECT order_id INTO new_order_id FROM orders WHERE customer_id = p_customer_id ORDER BY order_date desc LIMIT 1;
+
+    RETURN new_order_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+/****************************************************************************************
+UPDATE BOOK STOCK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION update_book_stock_branch(
+    p_book_id INTEGER,
+    p_branch_id INTEGER,
+    p_quantity INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    new_qty INTEGER;
+BEGIN
+    SELECT coalesce(get_book_branch_stock(p_book_id, p_branch_id) - p_quantity, 0) INTO new_qty;
+    IF new_qty = 0 THEN
+        DELETE FROM store_inventory WHERE location_id = p_branch_id AND book_id = p_book_id;
+        RETURN;
+    end if;
+    UPDATE store_inventory SET quantity = new_qty WHERE location_id = p_branch_id AND book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
 /****************************************************************************************
 GET CUSTOMER BRANCH FUNCTION
@@ -524,5 +583,27 @@ BEGIN
 
     UPDATE customer SET branch_id = p_branch_id WHERE customer_id = p_customer_id;
 --     COMMIT;
+END;
+$$ LANGUAGE plpgsql;
+
+
+/****************************************************************************************
+GET CUSTOMER CART
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_order_ids(p_customer_id INTEGER)
+RETURNS TABLE (
+    order_id INTEGER,
+    order_date TIMESTAMP WITH TIME ZONE,
+    author VARCHAR,
+    genre VARCHAR,
+    quantity INTEGER,
+    price MONEY,
+    total_price MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT o.order_id, o.order_date, o.total_price, o.shipping_address, o.delivery_date, o.status
+    FROM orders o
+    WHERE o.customer_id =  p_customer_id;
 END;
 $$ LANGUAGE plpgsql;

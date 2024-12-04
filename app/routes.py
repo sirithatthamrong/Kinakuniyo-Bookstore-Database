@@ -273,26 +273,6 @@ def register_routes(app):
             flash(f'Error: {e}')
             return redirect(url_for('cart'))
         
-    @app.route('/customer/profile/cart/delete', methods=['POST'])
-    def delete_cart():
-        username = require_login()
-
-        customer_id = get_customer_id(username)
-        if not customer_id:
-            flash('Customer not found.', 'danger')
-            return redirect(url_for('home'))
-
-        try:
-            db.session.execute(text("SELECT remove_book_from_customer_cart(:customer_id, :book_id)"),
-                               {'customer_id': customer_id, 'book_id': book_id})
-            db.session.commit()
-            flash('Book removed from cart successfully.')
-            return redirect(url_for('cart'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error: {e}')
-            return redirect(url_for('cart'))
-        
     @app.route('/customer/profile/membership')
     def membership():
         username = require_login()
@@ -324,15 +304,39 @@ def register_routes(app):
         locations = db.session.execute(text("SELECT location_id, store_name FROM store_location")).fetchall()
         return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations, membership = membership)
     
-    @app.route('/customer/profile/cart/payment/success', methods=['POST'])
+    @app.route('/customer/profile/cart/payment/success')
     def payment_success():
         username = require_login()
-        return render_template('home.html')
+        return render_template('orders.html')
+    
+    @app.route('/customer/profile/cart/payment/failure')
+    def payment_failure():
+        username = require_login()
+        return redirect(url_for('cart'))
     
     @app.route('/customer/profile/cart/payment', methods=['POST'])
     def payment():
         username = require_login()
-        return render_template('home.html')
+
+        customer_id = get_customer_id(username)
+
+        payment_method = request.form['payment_method']
+        branch = db.session.execute(text("SELECT * FROM get_customer_branch(:customer_id)"), {'customer_id': customer_id}).fetchone()
+
+        try:
+            print("Hi :D")
+            db.session.execute(text("SELECT complete_purchase(:customer_id, :payment_method, :branch_id)"), {'customer_id': customer_id, 'payment_method': payment_method, 'branch_id': branch.branch_id })
+            
+            print("To commit!")
+            db.session.commit()
+            print("Boop")
+            flash('Payment complete!')
+            return redirect(url_for('payment_success'))
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            flash(f'Error: {e}')
+            return redirect(url_for('payment_failure'))
 
     @app.route('/sitemap')
     def sitemap_html():

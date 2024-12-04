@@ -22,20 +22,17 @@
             <li><h3>Total</h3>: {{total_price.total}}</li>
             <li><h3>Discount</h3>: {{total_price.discount}}</li>
             <li><h3>Total</h3>: {{ total_price.total_price }} </li>
-            <li><h3>Pickup location</h3></li>
-            <li><select id="location" name="location" required>
-                {% for store in locations %}
-                <option value={{store.location_id}}>{{store.store_name}}</option>
-                {% endfor %}
-            </select></li>
-            <li><h3>Payment method</h3></li>
-            <li><select id="payment_method" name="payment_method" required>
-                <option value="cash">Cash</option>
-                <option value="creditcard">Credit Card</option>
-                <option value="bank">Bank Transfer</option>
-            </select></li>
             <li>
-                <form action="{{ url_for('payment', method=payment_method, addr=location) }}" method="POST">
+                <form action="{{ url_for('payment') }}" method="POST">
+                    <label for="payment_method">Payment method</label>
+                    <select id="payment_method" name="payment_method" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                        <option value="Online Payment">Online Payment</option>
+                        <option value="Gift Card">Gift Card</option>
+                        <option value="Points">Points</option>
+                    </select>
                     <button type="submit">Make order</button>
                 </form>
             </li>

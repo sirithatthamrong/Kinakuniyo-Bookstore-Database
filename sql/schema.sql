@@ -57,7 +57,7 @@ DROP TABLE IF EXISTS Orders CASCADE;
 CREATE TABLE Orders (
     order_id SERIAL PRIMARY KEY,
     customer_id INTEGER REFERENCES Customer(customer_id) ON DELETE CASCADE,
-    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    order_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     total_price MONEY NOT NULL,
     status VARCHAR(50) NOT NULL CHECK (
         status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')
