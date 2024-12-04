@@ -28,8 +28,14 @@
                 <option value={{store.location_id}}>{{store.store_name}}</option>
                 {% endfor %}
             </select></li>
+            <li><h3>Payment method</h3></li>
+            <li><select id="payment_method" name="payment_method" required>
+                <option value="cash">Cash</option>
+                <option value="creditcard">Credit Card</option>
+                <option value="bank">Bank Transfer</option>
+            </select></li>
             <li>
-                <form action="{{ url_for('payment') }}" method="POST">
+                <form action="{{ url_for('payment', method=payment_method, addr=location) }}" method="POST">
                     <button type="submit">Make order</button>
                 </form>
             </li>

@@ -205,7 +205,30 @@ def register_routes(app):
 
         cart = db.session.execute(text("SELECT * FROM get_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
         total_price = db.session.execute(text("SELECT * FROM get_customer_cart_total(:customer_id)"), {'customer_id': customer_id}).fetchone()
-        return render_template('cart.html', cart=cart, total_price=total_price)
+        locations = db.session.execute(text("SELECT location_id, store_name FROM store_location")).fetchall()
+        selected_branch = db.session.execute(text("SELECT * FROM get_customer_branch(:customer_id)"), {'customer_id': customer_id}).fetchone()
+        return render_template('cart.html', cart=cart, total_price=total_price, locations = locations, selected_branch = selected_branch)
+    
+    @app.route('/customer/profile/branch/update', methods=['POST'])
+    def update_branch():
+        username = require_login()
+        customer_id = get_customer_id(username)
+
+        branch_id = request.form['new_branch']
+        print(branch_id)
+        if not customer_id:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('login'))
+        try:
+            print("Hello :()")
+            db.session.execute(text("CALL update_customer_branch(:customer_id, :branch_id)"), {'customer_id': customer_id, 'branch_id': branch_id}).fetchall()
+            print("Hi!")
+            db.session.commit()
+            return redirect(url_for('cart'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('cart'))
 
     @app.route('/customer/profile/cart/add_book/<int:book_id>', methods=['POST'])    
     def add_book_to_cart(book_id):
@@ -234,6 +257,26 @@ def register_routes(app):
     
     @app.route('/customer/profile/cart/remove_book/<int:book_id>', methods=['POST'])
     def remove_book_from_cart(book_id):
+        username = require_login()
+
+        customer_id = get_customer_id(username)
+        if not customer_id:
+            flash('Customer not found.', 'danger')
+            return redirect(url_for('home'))
+
+        try:
+            db.session.execute(text("SELECT remove_book_from_customer_cart(:customer_id, :book_id)"),
+                               {'customer_id': customer_id, 'book_id': book_id})
+            db.session.commit()
+            flash('Book removed from cart successfully.')
+            return redirect(url_for('cart'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {e}')
+            return redirect(url_for('cart'))
+        
+    @app.route('/customer/profile/cart/delete', methods=['POST'])
+    def delete_cart():
         username = require_login()
 
         customer_id = get_customer_id(username)
@@ -282,6 +325,11 @@ def register_routes(app):
                                                 {'username': username}).fetchone()
         locations = db.session.execute(text("SELECT location_id, store_name FROM store_location")).fetchall()
         return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations, membership = membership)
+    
+    @app.route('/customer/profile/cart/payment/success', methods=['POST'])
+    def payment_success():
+        username = require_login()
+        return render_template('home.html')
     
     @app.route('/customer/profile/cart/payment', methods=['POST'])
     def payment():

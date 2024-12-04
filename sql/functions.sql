@@ -474,4 +474,35 @@ CREATE OR REPLACE PROCEDURE complete_purchase(
 
         COMMIT;
     END;
-    $$ LANGUAGE plpgsql
+    $$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET CUSTOMER BRANCH FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_branch(
+    p_customer_id INTEGER
+) RETURNS TABLE (
+    branch_id INTEGER,
+    branch_name VARCHAR(50)
+) AS $$
+BEGIN
+    RETURN QUERY SELECT s.location_id, s.store_name FROM store_location s
+    JOIN customer c ON c.customer_id = p_customer_id
+    WHERE s.location_id = c.branch_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+UPDATE CUSTOMER BRANCH FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE PROCEDURE update_customer_branch(
+    p_customer_id INTEGER,
+    p_branch_id INTEGER
+) AS $$
+BEGIN
+    CALL delete_customer_cart(p_customer_id);
+
+    UPDATE customer SET branch_id = p_branch_id WHERE customer_id = p_customer_id;
+    COMMIT;
+END;
+$$ LANGUAGE plpgsql;
