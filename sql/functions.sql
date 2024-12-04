@@ -282,6 +282,7 @@ RETURNS VOID AS $$
 DECLARE
     customer_cart INTEGER;
     book_price MONEY;
+    max_quantity INTEGER;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id) THEN
         SELECT create_new_cart(p_customer_id);
@@ -293,10 +294,14 @@ BEGIN
         RAISE EXCEPTION 'Book already in cart.';
     end if;
 
-    SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
+    SELECT coalesce(get_book_branch_stock(p_book_id, c.branch_id), 0) INTO max_quantity FROM customer c WHERE c.customer_id = p_customer_id;
 
-    INSERT INTO shopping_cart_item (cart_id, book_id, quantity, price)
-    VALUES (customer_cart, p_book_id, p_book_quantity, book_price);
+    IF max_quantity <> 0 THEN
+        SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
+
+        INSERT INTO shopping_cart_item (cart_id, book_id, quantity, price)
+        VALUES (customer_cart, p_book_id, LEAST(p_book_quantity, max_quantity), book_price);
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -319,20 +324,6 @@ $$ LANGUAGE plpgsql;
 /****************************************************************************************
 DELETE CUSTOMER CART FUNCTION
 *****************************************************************************************/
--- CREATE OR REPLACE PROCEDURE delete_customer_cart(
---     p_customer_id INTEGER
--- ) AS $$
--- DECLARE
---     cart_item RECORD;
--- BEGIN
---     FOR cart_item IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
---         PERFORM remove_book_from_customer_cart(p_customer_id, cart_item.book_id);
---         end loop;
---     DELETE FROM shopping_cart
---     WHERE customer_id = p_customer_id;
--- --     COMMIT;
--- END;
--- $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_customer_cart(
     p_customer_id INTEGER
 ) RETURNS VOID AS $$
@@ -446,6 +437,22 @@ END;
 $$ LANGUAGE plpgsql;
 
 /****************************************************************************************
+GET BOOK LOCATION STOCK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_book_branch_stock(p_book_id INTEGER, p_branch_id INTEGER)
+RETURNS INTEGER AS $$
+DECLARE
+    stock INTEGER;
+BEGIN
+    SELECT si.quantity INTO stock
+    FROM store_location sl
+    JOIN store_inventory si ON sl.location_id = si.location_id
+    WHERE si.book_id = p_book_id AND si.location_id = p_branch_id LIMIT 1;
+    RETURN stock;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
 CHECK STOCK QUANTITY FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION check_stock_quantity(
@@ -471,11 +478,11 @@ $$ LANGUAGE plpgsql;
 /****************************************************************************************
 COMPLETE PURCHASE FUNCTION
 *****************************************************************************************/
-CREATE OR REPLACE PROCEDURE complete_purchase(
+CREATE OR REPLACE FUNCTION complete_purchase(
     p_customer_id INTEGER,
     p_payment_method VARCHAR(50),
     p_location VARCHAR(50)
-) AS
+) RETURNS BOOLEAN AS
     $$
     DECLARE
         CART_ITEM record;
@@ -486,7 +493,6 @@ CREATE OR REPLACE PROCEDURE complete_purchase(
 
         SELECT update_customer_points_and_rank(p_customer_id);
 
-        COMMIT;
     END;
     $$ LANGUAGE plpgsql;
 
@@ -509,18 +515,6 @@ $$ LANGUAGE plpgsql;
 /****************************************************************************************
 UPDATE CUSTOMER BRANCH FUNCTION
 *****************************************************************************************/
--- CREATE OR REPLACE PROCEDURE update_customer_branch(
---     p_customer_id INTEGER,
---     p_branch_id INTEGER
--- ) AS $$
--- BEGIN
---     CALL delete_customer_cart(p_customer_id);
---
---     UPDATE customer SET branch_id = p_branch_id WHERE customer_id = p_customer_id;
--- --     COMMIT;
--- END;
--- $$ LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION update_customer_branch(
     p_customer_id INTEGER,
     p_branch_id INTEGER
