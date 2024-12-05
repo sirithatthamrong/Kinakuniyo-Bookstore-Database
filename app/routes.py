@@ -302,7 +302,9 @@ def register_routes(app):
         membership = db.session.execute(text("SELECT loyalty_points, discount_rate, membership_status, shipping_discount FROM get_membership_details(:username)"),
                                                 {'username': username}).fetchone()
         locations = db.session.execute(text("SELECT location_id, store_name FROM store_location")).fetchall()
-        return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations, membership = membership)
+        payment_methods = db.session.execute(text("SELECT * FROM get_payment_methods()")).fetchall()
+
+        return render_template('checkout.html', cart = cart, total_price = total_price, locations = locations, membership = membership, payment_methods = payment_methods)
     
     @app.route('/customer/profile/cart/payment/success')
     def payment_success():
@@ -320,7 +322,7 @@ def register_routes(app):
 
         customer_id = get_customer_id(username)
 
-        payment_method = request.form['payment_method']
+        payment_method = request.form['method']
         branch = db.session.execute(text("SELECT * FROM get_customer_branch(:customer_id)"), {'customer_id': customer_id}).fetchone()
 
         try:

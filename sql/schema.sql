@@ -74,11 +74,19 @@ DROP TABLE IF EXISTS Payment CASCADE;
 CREATE TABLE Payment (
     payment_id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
-    payment_method VARCHAR(50) NOT NULL CHECK (
-        payment_method IN ('Cash', 'Credit Card', 'Debit Card', 'Online Payment', 'Gift Card', 'Points')
-    ),
+    payment_method INTEGER REFERENCES Payment_Method(method_id) ON DELETE SET NULL,
     amount MONEY NOT NULL,
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+/****************************************************************************************
+PAYMENT TABLE
+*****************************************************************************************/
+DROP TABLE IF EXISTS Payment_Method CASCADE;
+CREATE TABLE Payment_Method (
+    method_id SERIAL PRIMARY KEY,
+    method_name VARCHAR(50) NOT NULL
 );
 
 

@@ -24,14 +24,11 @@
             <li><h3>Total</h3>: {{ total_price.total_price }} </li>
             <li>
                 <form action="{{ url_for('payment') }}" method="POST">
-                    <label for="payment_method">Payment method</label>
-                    <select id="payment_method" name="payment_method" required>
-                        <option value="Cash">Cash</option>
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="Debit Card">Debit Card</option>
-                        <option value="Online Payment">Online Payment</option>
-                        <option value="Gift Card">Gift Card</option>
-                        <option value="Points">Points</option>
+                    <label for="method">Payment method</label>
+                    <select id="method" name="method" required>
+                        {% for m in payment_methods %}
+                        <option value={{m.method_id}}>{{m.method_name}}</option>
+                        {% endfor %}
                     </select>
                     <button type="submit">Make order</button>
                 </form>

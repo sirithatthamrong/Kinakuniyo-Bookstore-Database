@@ -480,7 +480,7 @@ COMPLETE PURCHASE FUNCTION
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION complete_purchase(
     p_customer_id INTEGER,
-    p_payment_method VARCHAR(50),
+    p_payment_method INTEGER,
     p_branch_id INTEGER
 ) RETURNS VOID AS $$
 DECLARE
@@ -607,3 +607,18 @@ BEGIN
     WHERE o.customer_id =  p_customer_id;
 END;
 $$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET CUSTOMER CART
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_payment_methods()
+RETURNS TABLE (
+    method_id INTEGER,
+    method_name VARCHAR(50)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT * FROM payment_method;
+END;
+$$ LANGUAGE plpgsql;
+
