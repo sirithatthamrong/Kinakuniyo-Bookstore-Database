@@ -217,7 +217,7 @@ BEGIN
     WHERE customer_id = p_customer_id;
 
     -- Determine the new rank based on points
-    IF current_points >= 76 THEN
+    IF current_points >= 71 THEN
         new_rank := 4;
     ELSIF current_points >= 51 THEN
         new_rank := 3;
@@ -290,11 +290,13 @@ BEGIN
 
     SELECT cart_id INTO customer_cart FROM shopping_cart WHERE shopping_cart.customer_id = p_customer_id;
 
-    IF EXISTS (SELECT 1 FROM shopping_cart_item WHERE shopping_cart_item.cart_id = customer_cart AND shopping_cart_item.book_id = p_book_id) THEN
+    IF EXISTS (SELECT 1 FROM shopping_cart_item WHERE shopping_cart_item.cart_id = customer_cart AND
+                                                      shopping_cart_item.book_id = p_book_id) THEN
         RAISE EXCEPTION 'Book already in cart.';
     end if;
 
-    SELECT coalesce(get_book_branch_stock(p_book_id, c.branch_id), 0) INTO max_quantity FROM customer c WHERE c.customer_id = p_customer_id;
+    SELECT coalesce(get_book_branch_stock(p_book_id, c.branch_id), 0) INTO max_quantity
+                                                                      FROM customer c WHERE c.customer_id = p_customer_id;
 
     IF max_quantity <> 0 THEN
         SELECT price INTO book_price FROM book WHERE book_id = p_book_id;
@@ -494,10 +496,12 @@ BEGIN
 
     FOR CART_ITEM IN SELECT * FROM get_customer_cart(p_customer_id) LOOP
         PERFORM update_book_stock_branch(CART_ITEM.book_id, p_branch_id, CART_ITEM.quantity);
-        INSERT INTO order_item (order_id, book_id, quantity, price) VALUES (new_order_id, CART_ITEM.book_id, CART_ITEM.quantity, CART_ITEM.total_price);
+        INSERT INTO order_item (order_id, book_id, quantity, price)
+            VALUES (new_order_id, CART_ITEM.book_id, CART_ITEM.quantity, CART_ITEM.total_price);
     end loop;
 
-    INSERT INTO payment (order_id, payment_method, amount, payment_date) VALUES (new_order_id, p_payment_method, cart_total, current_timestamp);
+    INSERT INTO payment (order_id, payment_method, amount, payment_date)
+        VALUES (new_order_id, p_payment_method, cart_total, current_timestamp);
 
     PERFORM delete_customer_cart(p_branch_id);
     PERFORM update_customer_points_and_rank(p_customer_id);
