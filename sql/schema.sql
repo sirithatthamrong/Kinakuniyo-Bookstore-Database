@@ -99,9 +99,7 @@ CREATE TABLE Order_Item (
     order_id INTEGER REFERENCES Orders(order_id) ON DELETE CASCADE,
     book_id INTEGER REFERENCES Book(book_id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price MONEY NOT NULL,
-    discount MONEY DEFAULT 0
-);
+    price MONEY NOT NULL);
 
 
 /****************************************************************************************

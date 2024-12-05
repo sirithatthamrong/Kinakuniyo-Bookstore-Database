@@ -192,10 +192,6 @@ def register_routes(app):
             flash(f'Error: {e}')
             return redirect(url_for('wishlist'))
 
-    @app.route('/customer/profile/orders')
-    def orders():
-        return render_template('orders.html')
-
     @app.route('/customer/profile/cart')
     def cart():
 
@@ -339,6 +335,10 @@ def register_routes(app):
             print(e)
             flash(f'Error: {e}')
             return redirect(url_for('payment_failure'))
+        
+    @app.route('/customer/profile/orders')
+    def orders():
+        return render_template('orders.html')
 
     @app.route('/sitemap')
     def sitemap_html():
