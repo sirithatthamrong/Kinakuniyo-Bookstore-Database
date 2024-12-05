@@ -305,7 +305,7 @@ def register_routes(app):
     @app.route('/customer/profile/cart/payment/success')
     def payment_success():
         username = require_login()
-        return render_template('orders.html')
+        return redirect(url_for('orders'))
     
     @app.route('/customer/profile/cart/payment/failure')
     def payment_failure():
@@ -338,9 +338,10 @@ def register_routes(app):
 
         customer_id = get_customer_id(username)
 
-        orders = db.session.execute(text("SELECT * FROM get_customer_orders(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        orders = db.session.execute(text("SELECT * FROM get_customer_order_ids(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        book_orders = db.session.execute(text("SELECT * FROM get_customer_order_books(:customer_id)"), {'customer_id': customer_id}).fetchall()
         payment = db.session.execute(text("SELECT * FROM get_customer_payment(:customer_id)"), {'customer_id': customer_id}).fetchall()
-        return render_template('orders.html', orders = orders, payment = payment)
+        return render_template('orders.html', orders = orders, book_orders=book_orders, payment = payment)
 
     @app.route('/sitemap')
     def sitemap_html():

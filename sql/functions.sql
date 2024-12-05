@@ -588,24 +588,41 @@ $$ LANGUAGE plpgsql;
 
 
 /****************************************************************************************
-GET CUSTOMER CART
+GET CUSTOMER ORDERS
 *****************************************************************************************/
-CREATE OR REPLACE FUNCTION get_customer_orders(p_customer_id INTEGER)
+CREATE OR REPLACE FUNCTION get_customer_order_ids(p_customer_id INTEGER)
 RETURNS TABLE (
     order_id INTEGER,
     order_date TIMESTAMP WITH TIME ZONE,
     total_price MONEY,
     shipping_address TEXT,
     delivery_date TIMESTAMP WITH TIME ZONE,
-    status VARCHAR(50),
+    status VARCHAR(50)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT o.order_id, o.order_date, o.total_price, o.shipping_address, o.delivery_date, o.status
+    FROM orders o
+    WHERE o.customer_id =  p_customer_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET CUSTOMER BOOK ORDERS
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_order_books(p_customer_id INTEGER)
+RETURNS TABLE (
+    order_id INTEGER,
     book_id INTEGER,
+    title VARCHAR(50),
     quantity INTEGER
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT o.order_id, o.order_date, o.total_price, o.shipping_address, o.delivery_date, o.status, oi.book_id, oi.quantity
+    SELECT o.order_id, oi.book_id, b.title, oi.quantity
     FROM orders o
-    JOIN public.order_item oi on o.order_id = oi.order_id
+    JOIN order_item oi ON o.order_id = oi.order_id
+    JOIN book b ON b.book_id = oi.book_id
     WHERE o.customer_id =  p_customer_id;
 END;
 $$ LANGUAGE plpgsql;

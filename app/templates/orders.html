@@ -1,4 +1,25 @@
 {% extends 'customer_profile.html' %}
 {% block profile_content %}
-
+<h3>Previous Orders</h3>
+{% for order in orders %}
+<h4>Order #{{order.order_id}}</h4>
+<ul>
+    <li>Status: {{order.status}}</li>
+    <li>Order date: {{order.order_date}}</li>
+    <li>Total: {{order.total_price}}</li>
+    {% for method in payment %}
+    {% if method.order_id == order.order_id %}
+    <li>Paid by {{method.payment_method}}</li>
+    {% endif %}
+    {% endfor %}
+    <li>Delivery to: {{order.shipping_address}}</li>
+    <ul>
+        {% for book in book_orders %}
+        {% if book.order_id == order.order_id %}
+        <li>{{book.title}} -- Qty: {{book.quantity}}</li> 
+        {% endif %}
+        {% endfor %}
+    </ul>
+</ul>
+{% endfor %}
 {% endblock %}
