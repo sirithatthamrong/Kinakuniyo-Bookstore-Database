@@ -63,7 +63,7 @@ CREATE TABLE Orders (
         status IN ('Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')
     ),
     shipping_address TEXT,
-    delivery_date TIMESTAMP
+    delivery_date TIMESTAMP WITH TIME ZONE
 );
 
 

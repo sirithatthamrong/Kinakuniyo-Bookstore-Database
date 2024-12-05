@@ -322,13 +322,9 @@ def register_routes(app):
         branch = db.session.execute(text("SELECT * FROM get_customer_branch(:customer_id)"), {'customer_id': customer_id}).fetchone()
 
         try:
-            print("Hi :D")
             db.session.execute(text("SELECT complete_purchase(:customer_id, :payment_method, :branch_id)"), {'customer_id': customer_id, 'payment_method': payment_method, 'branch_id': branch.branch_id })
-            
-            print("To commit!")
+            db.session.execute(text("SELECT delete_customer_cart(:customer_id)"), {'customer_id': customer_id}).fetchall()
             db.session.commit()
-            print("Boop")
-            flash('Payment complete!')
             return redirect(url_for('payment_success'))
         except Exception as e:
             db.session.rollback()
@@ -338,7 +334,13 @@ def register_routes(app):
         
     @app.route('/customer/profile/orders')
     def orders():
-        return render_template('orders.html')
+        username = require_login()
+
+        customer_id = get_customer_id(username)
+
+        orders = db.session.execute(text("SELECT * FROM get_customer_orders(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        payment = db.session.execute(text("SELECT * FROM get_customer_payment(:customer_id)"), {'customer_id': customer_id}).fetchall()
+        return render_template('orders.html', orders = orders, payment = payment)
 
     @app.route('/sitemap')
     def sitemap_html():

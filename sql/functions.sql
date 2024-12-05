@@ -590,26 +590,49 @@ $$ LANGUAGE plpgsql;
 /****************************************************************************************
 GET CUSTOMER CART
 *****************************************************************************************/
-CREATE OR REPLACE FUNCTION get_customer_order_ids(p_customer_id INTEGER)
+CREATE OR REPLACE FUNCTION get_customer_orders(p_customer_id INTEGER)
 RETURNS TABLE (
     order_id INTEGER,
     order_date TIMESTAMP WITH TIME ZONE,
-    author VARCHAR,
-    genre VARCHAR,
-    quantity INTEGER,
-    price MONEY,
-    total_price MONEY
+    total_price MONEY,
+    shipping_address TEXT,
+    delivery_date TIMESTAMP WITH TIME ZONE,
+    status VARCHAR(50),
+    book_id INTEGER,
+    quantity INTEGER
 ) AS $$
 BEGIN
     RETURN QUERY
-    SELECT o.order_id, o.order_date, o.total_price, o.shipping_address, o.delivery_date, o.status
+    SELECT o.order_id, o.order_date, o.total_price, o.shipping_address, o.delivery_date, o.status, oi.book_id, oi.quantity
     FROM orders o
+    JOIN public.order_item oi on o.order_id = oi.order_id
     WHERE o.customer_id =  p_customer_id;
 END;
 $$ LANGUAGE plpgsql;
 
 /****************************************************************************************
-GET CUSTOMER CART
+GET PAYMENTS
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION get_customer_payment(
+    p_customer_id INTEGER
+)
+RETURNS TABLE (
+    payment_id INTEGER,
+    order_id INTEGER,
+    payment_method VARCHAR(50),
+    amount MONEY
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.payment_id, o.order_id, pm.method_name, p.amount FROM payment p
+    JOIN orders o ON o.order_id = p.order_id
+    JOIN payment_method pm ON p.payment_method = pm.method_id
+    WHERE o.customer_id = p_customer_id;
+END;
+$$ LANGUAGE plpgsql;
+
+/****************************************************************************************
+GET PAYMENT METHODS
 *****************************************************************************************/
 CREATE OR REPLACE FUNCTION get_payment_methods()
 RETURNS TABLE (
