@@ -558,6 +558,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/****************************************************************************************
+ADD BOOK STOCK FUNCTION
+*****************************************************************************************/
+CREATE OR REPLACE FUNCTION add_book_stock_branch(
+    p_book_id INTEGER,
+    p_branch_id INTEGER,
+    p_quantity INTEGER
+) RETURNS VOID AS $$
+DECLARE
+    new_qty INTEGER;
+BEGIN
+    SELECT coalesce(get_book_branch_stock(p_book_id, p_branch_id) + p_quantity, p_quantity) INTO new_qty;
+    IF new_qty = p_quantity THEN
+        INSERT INTO store_inventory (location_id, book_id, quantity) VALUES (p_branch_id, p_book_id, new_qty);
+        RETURN;
+    end if;
+    UPDATE store_inventory SET quantity = new_qty WHERE location_id = p_branch_id AND book_id = p_book_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
 /****************************************************************************************
 GET CUSTOMER BRANCH FUNCTION
